@@ -1,5 +1,3 @@
----
-
 # 组合示例：Reply Keyboard 与 Inline Actions
 
 > 下列示例展示同时使用 `meta.replyKeyboard` 与 `meta.inlineActions` 的常见组合。
