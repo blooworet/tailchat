@@ -366,7 +366,7 @@ export const NormalMessage: React.FC<ChatMessageItemProps> = React.memo(
                     ) : allRead ? (
                       <Icon icon="mdi:check-all" />
                     ) : anyRead ? (
-                      <Icon icon="mdi:check" />
+                      <Icon icon="mdi:check-all" />
                     ) : (
                       <Icon icon="mdi:check" />
                     )}
@@ -405,7 +405,7 @@ export const NormalMessage: React.FC<ChatMessageItemProps> = React.memo(
                   ) : allRead ? (
                     <Icon icon="mdi:check-all" />
                   ) : anyRead ? (
-                    <Icon icon="mdi:check" />
+                    <Icon icon="mdi:check-all" />
                   ) : (
                     <Icon icon="mdi:check" />
                   )}
