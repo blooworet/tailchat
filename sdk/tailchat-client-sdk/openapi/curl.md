@@ -599,9 +599,46 @@ curl -sS -X POST \
 > 说明：以下示例演示如何用 cURL 手动向你的机器人回调地址发送事件，以便本地联调（跳过服务器）。
 > 请将 `http://localhost:3000/bot/callback` 替换为你的服务实际回调 URL。
 
+## 回调类型总览（完整）
+
+- inbox
+  - 触发：群聊中 @ 机器人，或用户向 openapi 机器人发送 DM 文本
+  - Header：`X-TC-Payload-Type: inbox`
+  - 负载：`type: "message"`，`payload` 含 `converseId/messageId/messageAuthor/messageSnippet/messagePlainContent`
+
+- dm.start
+  - 触发：用户与机器人建立 DM 并触发 `/start`（或通过 deep link）
+  - Header：`X-TC-Payload-Type: dm.start`
+  - 负载：`type: "dm.start"`，`payload` 含 `botUserId/fromUserId/converseId/params/timestamp`
+
+- buttonCallback
+  - 触发：仅当点击类型为 `invoke`/`modal`，且能路由到某个机器人（通常需在 `params` 中携带 `botId`）
+  - Header：`X-TC-Payload-Type: buttonCallback`
+  - 负载：`type: "buttonCallback"`，`payload` 含 `messageAuthor/converseId/groupId/originalMessageId/actionId/type(params)/traceId/ts`
+
+## Fanout 与路由说明
+
+- inbox
+  - 群聊只会把 @ 指向的目标机器人回调到你的服务；不会广播到其它机器人。
+  - DM 只会回调到该 openapi 机器人对应的应用。
+
+- buttonCallback（内联按钮）
+  - 不做 fanout：仅当按钮 `params.botId` 可路由到你的机器人时才会回调到你。
+  - 同一消息包含多个按钮时，仅“被点击的按钮”对应的 `botId` 会收到回调。
+
+## traceId 语义与限制
+
+- 来源：由客户端在按钮点击时生成并随回调透传（或由你自定义 `params.traceId`）。
+- 绑定：与点击用户 `userId`、目标机器人 `botId` 绑定。
+- 使用：用于调用 `/api/openapi/bot/answerCallbackQuery`；单次使用、有效期 30 秒。
+- 典型错误：`Invalid or expired traceId`、`TraceId does not belong to this bot`、`UserId mismatch`、`Rate limit exceeded`。
+
 ## inbox —— 消息收件箱回调
 - 触发场景：用户在群聊 @ 机器人，或用户向 openapi 机器人发送 DM 文本时。
 - 服务器真实回调时会带 Header：`X-TC-Payload-Type: inbox`
+
+- 字段补充：`groupId` 可为空（DM 场景为 null/省略）；`messageSnippet` 为摘要，`messagePlainContent` 为纯文本。
+- 加密消息：`messagePlainContent` 为空，`messageSnippet` 固定显示为 `"加密消息"`。
 
 示例负载（简化）：
 ```json
