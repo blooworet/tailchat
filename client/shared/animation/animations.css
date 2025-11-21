@@ -1,0 +1,393 @@
+/* Tailchat 动态消息更新动效样式 */
+
+/* 基础动效变量 */
+:root {
+  --animation-duration-fast: 150ms;
+  --animation-duration-normal: 300ms;
+  --animation-duration-slow: 500ms;
+  --animation-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --animation-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --animation-easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* 消息动效包装器 */
+.message-animation-wrapper {
+  position: relative;
+  transition: all var(--animation-duration-normal) var(--animation-easing-standard);
+}
+
+.message-animation-wrapper.animating {
+  z-index: 1;
+}
+
+/* 消息内容更新动效 */
+.message-update-enter {
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+.message-update-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all var(--animation-duration-normal) var(--animation-easing-standard);
+}
+
+.message-update-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.message-update-exit-active {
+  opacity: 0.7;
+  transform: scale(0.98);
+  transition: all 200ms var(--animation-easing-standard);
+}
+
+/* 按钮动效包装器 */
+.button-animation-wrapper {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--animation-duration-fast) var(--animation-easing-standard);
+  border-radius: inherit;
+}
+
+.button-animation-wrapper:hover {
+  transform: translateY(-1px);
+}
+
+.button-animation-wrapper.animating {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* 按钮点击波纹效果 */
+.button-animation-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s ease;
+  pointer-events: none;
+}
+
+.button-animation-wrapper.animating::before {
+  left: 100%;
+}
+
+/* 按钮状态切换动效 */
+.button-update-animation {
+  position: relative;
+  overflow: hidden;
+}
+
+.button-update-animation::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 30%, 
+    rgba(255,255,255,0.2) 50%, 
+    transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.button-update-animation.updating::after {
+  transform: translateX(100%);
+}
+
+/* 加载状态动效 */
+.loading-animation-wrapper {
+  position: relative;
+}
+
+.loading-animation-wrapper.loading {
+  pointer-events: none;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.dark .loading-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.loading-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0,0,0,0.05) 50%, 
+    transparent 100%);
+  animation: loading-shimmer 1.5s infinite;
+}
+
+.dark .loading-shimmer {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255,255,255,0.1) 50%, 
+    transparent 100%);
+}
+
+@keyframes loading-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 加载动效过渡 */
+.loading-animation-enter {
+  opacity: 0;
+}
+
+.loading-animation-enter-active {
+  opacity: 1;
+  transition: opacity var(--animation-duration-normal) var(--animation-easing-standard);
+}
+
+.loading-animation-exit {
+  opacity: 1;
+}
+
+.loading-animation-exit-active {
+  opacity: 0;
+  transition: opacity var(--animation-duration-normal) var(--animation-easing-standard);
+}
+
+/* 错误状态动效 */
+.error-animation-wrapper.error {
+  animation: error-shake var(--animation-duration-slow) ease-in-out;
+}
+
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* 成功状态动效 */
+.success-animation {
+  animation: success-glow var(--animation-duration-normal) ease-out;
+}
+
+@keyframes success-glow {
+  0% { 
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+    background-color: transparent;
+  }
+  50% { 
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    background-color: rgba(34, 197, 94, 0.1);
+  }
+  100% { 
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+    background-color: transparent;
+  }
+}
+
+/* 脉冲动效 */
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* 弹跳动效 */
+.bounce-animation {
+  animation: bounce var(--animation-duration-slow) var(--animation-easing-bounce);
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+  40%, 43% { transform: translateY(-8px); }
+  70% { transform: translateY(-4px); }
+  90% { transform: translateY(-2px); }
+}
+
+/* 淡入淡出动效 */
+.fade-in {
+  animation: fade-in var(--animation-duration-normal) var(--animation-easing-standard);
+}
+
+.fade-out {
+  animation: fade-out var(--animation-duration-normal) var(--animation-easing-standard);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* 滑入滑出动效 */
+.slide-in-up {
+  animation: slide-in-up var(--animation-duration-normal) var(--animation-easing-decelerate);
+}
+
+.slide-out-down {
+  animation: slide-out-down var(--animation-duration-normal) var(--animation-easing-accelerate);
+}
+
+@keyframes slide-in-up {
+  from { 
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-down {
+  from { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to { 
+    transform: translateY(20px);
+    opacity: 0;
+  }
+}
+
+/* 缩放动效 */
+.scale-in {
+  animation: scale-in var(--animation-duration-normal) var(--animation-easing-bounce);
+}
+
+.scale-out {
+  animation: scale-out var(--animation-duration-normal) var(--animation-easing-standard);
+}
+
+@keyframes scale-in {
+  from { 
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-out {
+  from { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  to { 
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* 旋转动效 */
+.rotate-in {
+  animation: rotate-in var(--animation-duration-normal) var(--animation-easing-standard);
+}
+
+@keyframes rotate-in {
+  from { 
+    transform: rotate(-180deg) scale(0.8);
+    opacity: 0;
+  }
+  to { 
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 高性能动效优化 */
+.message-animation-wrapper,
+.button-animation-wrapper,
+.loading-animation-wrapper,
+.error-animation-wrapper {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 减少动效模式 */
+@media (prefers-reduced-motion: reduce) {
+  .message-animation-wrapper,
+  .button-animation-wrapper,
+  .loading-animation-wrapper,
+  .error-animation-wrapper {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .message-update-enter-active,
+  .message-update-exit-active,
+  .loading-animation-enter-active,
+  .loading-animation-exit-active,
+  .button-animation-wrapper::before,
+  .button-update-animation::after,
+  .loading-shimmer {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* 保留基本的透明度变化，但移除复杂动效 */
+  .message-update-enter-active,
+  .message-update-exit-active {
+    transition: opacity 0.1s ease !important;
+  }
+}
+
+/* 低性能设备优化 */
+@media (max-width: 768px) and (max-height: 1024px) {
+  :root {
+    --animation-duration-fast: 100ms;
+    --animation-duration-normal: 200ms;
+    --animation-duration-slow: 300ms;
+  }
+  
+  .button-animation-wrapper::before,
+  .button-update-animation::after,
+  .loading-shimmer {
+    display: none;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .button-animation-wrapper.animating {
+    box-shadow: 0 0 0 3px currentColor;
+  }
+  
+  .loading-overlay {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid currentColor;
+  }
+  
+  .dark .loading-overlay {
+    background: rgba(0, 0, 0, 0.95);
+  }
+}

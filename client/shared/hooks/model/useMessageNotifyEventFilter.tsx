@@ -16,6 +16,12 @@ export function useMessageNotifyEventFilter() {
       return;
     }
 
+    // Filter out fake messages from ack updates - they should only refresh UI state,
+    // not trigger notification sounds
+    if ((payload as any).__isAckUpdate) {
+      return;
+    }
+
     if (!checkIsMuted(payload.converseId, payload.groupId)) {
       sharedEvent.emit('receiveUnmutedMessage', payload);
     }

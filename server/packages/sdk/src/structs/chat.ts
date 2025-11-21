@@ -22,6 +22,37 @@ export interface MessageMetaStruct {
     author: string;
     content: string;
   };
+  inlineActions?: {
+    actions: Array<{
+      id: string;
+      type: 'command' | 'url' | 'invoke' | 'modal' | 'deeplink';
+      label?: string;
+      params?: Record<string, unknown>;
+    }>;
+    ranges?: Array<{
+      offset: number;
+      length: number;
+      style?: string;
+      actionId: string;
+    }>;
+    keyboard?: Array<{
+      actions: string[]; // action ids
+    }>;
+    scopes?: string[];
+    signature?: string;
+    analytics?: {
+      traceId?: string;
+    };
+  };
+  // 音频消息相关元数据
+  audio?: {
+    type: 'audio';
+    url: string;
+    duration: number; // 音频时长（秒）
+    fileSize?: number; // 文件大小（字节）
+    mimeType?: string; // MIME类型
+    waveform?: number[]; // 可选：音频波形数据
+  };
 }
 
 interface InboxMessageStruct {

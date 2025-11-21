@@ -7,6 +7,7 @@ import {
   sendMessage,
   SendMessagePayload,
 } from '../../model/message';
+import { appendUserDMConverse } from '../../model/user';
 import { chatActions } from '../slices';
 import { useAppDispatch, useAppSelector } from './useAppSelector';
 import _get from 'lodash/get';
@@ -25,6 +26,7 @@ import { MessageHelper } from '../../utils/message-helper';
 import { ChatConverseType } from '../../model/converse';
 import { sharedEvent } from '../../event';
 import { useUpdateRef } from '../../hooks/useUpdateRef';
+import { requestMemberAckSnapshot } from '../acks/snapshot';
 
 const genLocalMessageId = () => _uniqueId('localMessage_');
 
@@ -56,6 +58,14 @@ function useHandleSendMessage() {
     }
 
     const localMessageId = genLocalMessageId();
+
+    // 若发送的是私信消息（非群组），在发送前将其加入用户的 dmlist，
+    // 并同步更新本地 Redux 的 dmConverseIds，确保侧栏立即显示
+    if (!payload.groupId) {
+      dispatch(chatActions.addDMConverseId(payload.converseId));
+      // 后台同步失败不影响发送流程
+      appendUserDMConverse(payload.converseId).catch(() => {});
+    }
     dispatch(
       chatActions.appendLocalMessage({
         author: userId,
@@ -117,6 +127,7 @@ export function useConverseMessage(context: ConverseContext) {
 
   useEffect(() => {
     dispatch(chatActions.updateCurrentConverseId(converseId));
+    try { requestMemberAckSnapshot(converseId); } catch {}
 
     return () => {
       dispatch(chatActions.updateCurrentConverseId(null));

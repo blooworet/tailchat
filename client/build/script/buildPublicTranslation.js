@@ -19,15 +19,25 @@ const filepath = [
   // ),
 ];
 
+// 添加现有的locales文件作为基础
+const existingLocalesPath = path.resolve(__dirname, '../../locales/{{lang}}/translation.json');
+
 console.log('Build locales:', langs);
 for (const lang of langs) {
-  Promise.all(
-    filepath
+  const existingPath = existingLocalesPath.replace('{{lang}}', lang);
+  
+  // 先读取现有的locales文件（如果存在）
+  const readExistingLocales = fs.pathExists(existingPath)
+    .then(exists => exists ? fs.readJSON(existingPath) : {});
+  
+  Promise.all([
+    readExistingLocales,
+    ...filepath
       .map((p) => {
         return p.replace('{{lang}}', lang);
       })
-      .map((p) => fs.readJSON(p))
-  )
+      .map((p) => fs.readJSON(p).catch(() => ({}))) // 如果文件不存在，返回空对象
+  ])
     .then((jsons) => {
       let res = {};
       for (const json of jsons) {
@@ -52,5 +62,8 @@ for (const lang of langs) {
     })
     .then(() => {
       console.log(`Build Translation [${lang}] Success!`);
+    })
+    .catch((err) => {
+      console.error(`Build Translation [${lang}] Failed:`, err);
     });
 }

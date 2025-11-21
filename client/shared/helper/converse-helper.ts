@@ -2,7 +2,8 @@ import { getReduxStore, isValidStr } from '..';
 import { getCachedConverseInfo, getCachedUserInfo } from '../cache/cache';
 import { t } from '../i18n';
 import type { ChatConverseInfo } from '../model/converse';
-import { appendUserDMConverse } from '../model/user';
+// 不再在“确保会话存在”时自动把会话加入 dmlist，
+// 让侧栏显隐仅由用户主动行为（发送消息/显式添加）驱动
 import type { FriendInfo } from '../redux/slices/user';
 
 /**
@@ -21,8 +22,6 @@ export async function ensureDMConverse(
   if (!converse.members.includes(currentUserId)) {
     throw new Error(t('会话没有权限'));
   }
-
-  await appendUserDMConverse(converseId); // 添加到私人会话列表
 
   return converse;
 }
@@ -57,23 +56,29 @@ export async function getDMConverseName(
   }
 
   const otherConverseMembers = converse.members.filter((m) => m !== userId); // 成员Id
-  const otherMembersInfo = await Promise.all(
-    otherConverseMembers.map((memberId) => getCachedUserInfo(memberId))
-  );
+  const otherMembersInfo = (
+    await Promise.all(
+      otherConverseMembers.map((memberId) => getCachedUserInfo(memberId))
+    )
+  ).filter((m): m is any => !!m && !!m._id);
   const friends = getReduxStore().getState().user.friends;
   const friendNicknameMap = buildFriendNicknameMap(friends);
 
   const memberNicknames = otherMembersInfo.map((m) => {
+    if (!m || !m._id) {
+      return t('已删除用户');
+    }
     if (friendNicknameMap[m._id]) {
       return friendNicknameMap[m._id];
     }
-
-    return m.nickname ?? '';
+    return m.nickname ?? t('已删除用户');
   });
   const len = memberNicknames.length;
 
-  if (len === 1) {
-    return memberNicknames[0] ?? '';
+  if (len === 0) {
+    return t('已失效会话');
+  } else if (len === 1) {
+    return memberNicknames[0] ?? t('已删除用户');
   } else if (len === 2) {
     return `${memberNicknames[0]}, ${memberNicknames[1]}`;
   } else {

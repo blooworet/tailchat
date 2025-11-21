@@ -46,6 +46,13 @@ export class User extends TimeStamps implements Base {
   username?: string;
 
   /**
+   * username 小写影子字段（大小写不敏感匹配）
+   * 迁移阶段仅建立普通索引；唯一索引由迁移脚本创建
+   */
+  @prop({ index: true })
+  usernameLower?: string;
+
+  /**
    * 邮箱 不可被修改
    * 必填
    */

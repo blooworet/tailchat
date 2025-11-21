@@ -19,6 +19,7 @@ const MenuTitle = styled.div`
 // const Summary = Loadable(() => import('./Summary'));
 const Profile = Loadable(() => import('./Profile'));
 const Bot = Loadable(() => import('./Bot'));
+const BotCommands = Loadable(() => import('./BotCommands'));
 const Webpage = Loadable(() => import('./Webpage'));
 const OAuth = Loadable(() => import('./OAuth'));
 
@@ -54,6 +55,11 @@ const AppInfo: React.FC = React.memo(() => {
             type: 'item',
             title: Translate.app.bot,
             content: <Bot />,
+          },
+          {
+            type: 'item',
+            title: Translate.app.botCommands,
+            content: <BotCommands />,
           },
           {
             type: 'item',

@@ -36,12 +36,16 @@ const _Avatar: React.FC<AvatarProps> = React.memo((_props) => {
   const style = useMemo(() => {
     const _style: React.CSSProperties = {
       userSelect: 'none',
-      ...props.style,
-      backgroundColor: color,
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
+      ...props.style,
     };
+
+    // Only set auto background color if caller didn't provide one
+    if (typeof _style.backgroundColor === 'undefined' && color) {
+      _style.backgroundColor = color as any;
+    }
 
     if (_isNumber(props.size)) {
       // 为了支持rem统一管理宽度，将size转换为样式宽度(size类型上不支持rem单位)

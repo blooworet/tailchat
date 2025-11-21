@@ -49,6 +49,9 @@ export const PersonalSidebar: React.FC = React.memo(() => {
         (item) => item.to === state.user.info?._id
       ) >= 0
   );
+  const hasGroupInvite = useAppSelector(
+    (state) => state.user.groupInvites.length > 0
+  );
 
   return (
     <CommonSidebarWrapper data-tc-role="sidebar-personal">
@@ -60,6 +63,13 @@ export const PersonalSidebar: React.FC = React.memo(() => {
           icon={<Icon icon="mdi:account-multiple" />}
           to="/main/personal/friends"
           badge={hasFriendRequest}
+        />
+
+        <SidebarItem
+          name={t('群组邀请')}
+          icon={<Icon icon="mdi:account-group" />}
+          to="/main/personal/group-invites"
+          badge={hasGroupInvite}
         />
 
         {!disablePluginStore && (

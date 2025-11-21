@@ -1,15 +1,18 @@
 import React from 'react';
+import { isEmpty } from 'lodash';
 import {
-  isValidStr,
   useCachedUserInfo,
   useFriendNickname,
 } from 'tailchat-shared';
+import { useNavigate } from 'react-router-dom';
+import clsx from 'clsx';
 
 interface UserNameProps {
   userId: string;
+  showDiscriminator?: boolean;
   className?: string;
   style?: React.CSSProperties;
-  showDiscriminator?: boolean;
+
   fallbackName?: string;
 }
 
@@ -23,11 +26,7 @@ export const UserNamePure: React.FC<UserNameProps> = React.memo((props) => {
   return (
     <span className={className} style={style}>
       {cachedUserInfo.nickname ??
-        (isValidStr(fallbackName) ? fallbackName : <span>&nbsp;</span>)}
-
-      {showDiscriminator && (
-        <UserNameDiscriminator discriminator={cachedUserInfo.discriminator} />
-      )}
+        (isEmpty(fallbackName) ? <span>&nbsp;</span> : fallbackName)}
     </span>
   );
 });
@@ -40,9 +39,20 @@ export const UserName: React.FC<UserNameProps> = React.memo((props) => {
   const { userId, showDiscriminator, className, style, fallbackName } = props;
   const cachedUserInfo = useCachedUserInfo(userId);
   const friendNickname = useFriendNickname(userId);
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (cachedUserInfo.username) {
+      navigate(`/${cachedUserInfo.username}`);
+    }
+  };
 
   return (
-    <span className={className} style={style}>
+    <span 
+      className={clsx(className, cachedUserInfo.username && 'cursor-pointer hover:underline')} 
+      style={style}
+      onClick={cachedUserInfo.username ? handleClick : undefined}
+    >
       {friendNickname ? (
         <>
           {friendNickname}
@@ -50,11 +60,7 @@ export const UserName: React.FC<UserNameProps> = React.memo((props) => {
         </>
       ) : (
         cachedUserInfo.nickname ??
-        (isValidStr(fallbackName) ? fallbackName : <span>&nbsp;</span>)
-      )}
-
-      {showDiscriminator && (
-        <UserNameDiscriminator discriminator={cachedUserInfo.discriminator} />
+        (isEmpty(fallbackName) ? <span>&nbsp;</span> : fallbackName)
       )}
     </span>
   );
@@ -64,7 +70,7 @@ UserName.displayName = 'UserName';
 const UserNameDiscriminator: React.FC<{ discriminator: string }> = React.memo(
   ({ discriminator }) => {
     return (
-      <span className="text-gray-500 dark:text-gray-300 opacity-0 group-hover:opacity-100">
+      <span className="text-gray-500 dark:text-gray-300">
         #{discriminator}
       </span>
     );

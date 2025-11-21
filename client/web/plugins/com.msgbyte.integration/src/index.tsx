@@ -3,7 +3,9 @@ import { Translate } from './translate';
 
 const PLUGIN_NAME = '第三方集成';
 
-console.log(`Plugin ${PLUGIN_NAME} is loaded`);
+if (process.env.NODE_ENV === 'development') {
+  console.log(`Plugin ${PLUGIN_NAME} is loaded`);
+}
 
 regCustomPanel({
   position: 'groupdetail',

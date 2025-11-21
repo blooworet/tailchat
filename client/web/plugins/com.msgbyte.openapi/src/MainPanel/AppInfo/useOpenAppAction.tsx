@@ -6,6 +6,7 @@ import {
   useAsyncRequest,
   useEvent,
 } from '@capital/common';
+import { emitGlobalSocketEvent } from '@capital/common';
 import { useOpenAppInfo } from '../context';
 import type { OpenAppBot, OpenAppCapability, OpenAppOAuth } from '../types';
 
@@ -29,8 +30,8 @@ export function useOpenAppAction() {
           newCapability.splice(findIndex, 1);
         }
       }
-
-      await postRequest('/openapi/app/setAppCapability', {
+      // WS 调用（通过宿主提供的桥接）
+      await emitGlobalSocketEvent('openapi.app.setAppCapability', {
         appId,
         capability: newCapability,
       });
@@ -41,7 +42,7 @@ export function useOpenAppAction() {
 
   const [, handleSetAppInfo] = useAsyncRequest(
     async (fieldName: string, fieldValue: string) => {
-      await postRequest('/openapi/app/setAppInfo', {
+      await emitGlobalSocketEvent('openapi.app.setAppInfo', {
         appId,
         fieldName,
         fieldValue,
@@ -53,7 +54,7 @@ export function useOpenAppAction() {
 
   const [, handleUpdateOAuthInfo] = useAsyncRequest(
     async <T extends keyof OpenAppOAuth>(name: T, value: OpenAppOAuth[T]) => {
-      await postRequest('/openapi/app/setAppOAuthInfo', {
+      await emitGlobalSocketEvent('openapi.app.setAppOAuthInfo', {
         appId,
         fieldName: name,
         fieldValue: value,
@@ -65,7 +66,8 @@ export function useOpenAppAction() {
 
   const [, handleUpdateBotInfo] = useAsyncRequest(
     async <T extends keyof OpenAppBot>(name: T, value: OpenAppBot[T]) => {
-      await postRequest('/openapi/app/setAppBotInfo', {
+      // 改为通过 WebSocket 调用
+      await emitGlobalSocketEvent('openapi.app.setAppBotInfo', {
         appId,
         fieldName: name,
         fieldValue: value,
@@ -75,13 +77,12 @@ export function useOpenAppAction() {
     [appId, refresh]
   );
 
+
   const handleDeleteApp = useEvent(() => {
     openReconfirmModal({
       onConfirm: async () => {
         try {
-          await postRequest('/openapi/app/delete', {
-            appId,
-          });
+          await emitGlobalSocketEvent('openapi.app.delete', { appId });
           onSelectApp(null);
           await refresh();
         } catch (err) {
@@ -90,6 +91,7 @@ export function useOpenAppAction() {
       },
     });
   });
+
 
   return {
     loading,

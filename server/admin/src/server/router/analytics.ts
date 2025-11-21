@@ -108,24 +108,18 @@ router.get('/activeUsers', auth(), async (req, res) => {
           _id: 0,
           userId: '$_id',
           messageCount: '$count',
-          userName: {
-            $concat: [
-              {
-                $arrayElemAt: ['$userInfo.nickname', 0],
-              },
-              '#',
-              {
-                $arrayElemAt: ['$userInfo.discriminator', 0],
-              },
-            ],
-            // $arrayElemAt: ['$userInfo.nickname', 0],
-          },
+          nickname: { $arrayElemAt: ['$userInfo.nickname', 0] },
+          username: { $arrayElemAt: ['$userInfo.username', 0] },
         },
       },
     ])
     .exec();
 
-  const activeUsers = aggregateRes;
+  const activeUsers = aggregateRes.map((u: any) => ({
+    userId: u.userId,
+    messageCount: u.messageCount,
+    userName: u.username ? `@${u.username}` : u.nickname,
+  }));
 
   res.json({ activeUsers });
 });
@@ -193,24 +187,18 @@ router.get('/fileStorageUserTop', auth(), async (req, res) => {
           _id: 0,
           userId: '$_id',
           fileStorageTotal: '$total',
-          userName: {
-            $concat: [
-              {
-                $arrayElemAt: ['$userInfo.nickname', 0],
-              },
-              '#',
-              {
-                $arrayElemAt: ['$userInfo.discriminator', 0],
-              },
-            ],
-            // $arrayElemAt: ['$userInfo.nickname', 0],
-          },
+          nickname: { $arrayElemAt: ['$userInfo.nickname', 0] },
+          username: { $arrayElemAt: ['$userInfo.username', 0] },
         },
       },
     ])
     .exec();
 
-  const fileStorageUserTop = aggregateRes;
+  const fileStorageUserTop = aggregateRes.map((u: any) => ({
+    userId: u.userId,
+    fileStorageTotal: u.fileStorageTotal,
+    userName: u.username ? `@${u.username}` : u.nickname,
+  }));
 
   res.json({ fileStorageUserTop });
 });

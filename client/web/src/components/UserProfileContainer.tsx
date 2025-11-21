@@ -1,47 +1,44 @@
-import { fetchImagePrimaryColor } from '@/utils/image-helper';
-import React, { PropsWithChildren } from 'react';
-import { AvatarWithPreview, getTextColorHex } from 'tailchat-design';
-import { useAsync, useCachedOnlineStatus, UserBaseInfo } from 'tailchat-shared';
+import React, { useState, useEffect } from 'react';
+import { AvatarWithPreview } from 'tailchat-design';
+import { getUserOnlineStatus } from 'tailchat-shared/model/user';
 
 /**
  * 用户信息容器
  */
-export const UserProfileContainer: React.FC<
-  PropsWithChildren<{ userInfo: UserBaseInfo }>
-> = React.memo((props) => {
+export const UserProfileContainer = React.memo((props: any) => {
   const { userInfo } = props;
   const userId = userInfo._id;
-  const [isOnline] = useCachedOnlineStatus([userId]);
+  const [isOnline, setIsOnline] = useState(false);
 
-  const { value: bannerColor } = useAsync(async () => {
-    if (!userInfo.avatar) {
-      return getTextColorHex(userInfo.nickname);
-    }
+  // 获取在线状态
+  useEffect(() => {
+    const fetchOnlineStatus = async () => {
+      try {
+        const onlineStatusList = await getUserOnlineStatus([userId]);
+        setIsOnline(onlineStatusList?.[0] ?? false);
+      } catch (e) {
+        // 错误时保持 false
+        setIsOnline(false);
+      }
+    };
 
-    const rgba = await fetchImagePrimaryColor(userInfo.avatar);
-    return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
-  }, [userInfo.avatar]);
+    fetchOnlineStatus();
+  }, [userId]);
 
   return (
-    <div className="relative bg-inherit">
-      <div
-        style={{
-          width: '100%',
-          height: 60,
-          backgroundColor: bannerColor,
-        }}
-      />
-
-      <div className="absolute p-1 rounded-1/2 -mt-11 ml-3 bg-inherit">
+    <div className="text-center p-8">
+      {/* 头像居中显示 */}
+      <div className="flex justify-center mb-6">
         <AvatarWithPreview
-          size={80}
+          size={120}
           src={userInfo.avatar}
           name={userInfo.nickname}
           isOnline={isOnline}
         />
       </div>
 
-      <div className="p-2 mt-10">{props.children}</div>
+      {/* 用户信息内容 */}
+      <div className="text-gray-900 dark:text-white">{props.children}</div>
     </div>
   );
 });

@@ -31,13 +31,12 @@ export const App: React.FC = React.memo(() => {
 
       <Box>
         <Tabs flexDirection="column" onChange={() => {}}>
-          {/* Temporary comments due to react version issues */}
-          {/* <Tab name="tab1">
+          <Tab name="tab1">
             <Text>Foo</Text>
           </Tab>
           <Tab name="tab2">
             <Text>Bar</Text>
-          </Tab> */}
+          </Tab>
         </Tabs>
       </Box>
     </Box>

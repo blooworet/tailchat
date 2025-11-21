@@ -41,8 +41,15 @@ class InboxService extends TcService {
                     converseId: payload.converseId,
                     messageId: payload.messageId,
                     messageAuthor: payload.author,
-                    messageSnippet: payload.content,
-                    messagePlainContent: payload.plain,
+                    // 加密消息不提供明文片段
+                    messageSnippet:
+                      (payload?.meta && (payload.meta as any).e2ee === true)
+                        ? '加密消息'
+                        : payload.content,
+                    messagePlainContent:
+                      (payload?.meta && (payload.meta as any).e2ee === true)
+                        ? undefined
+                        : payload.plain,
                   },
                 });
               })

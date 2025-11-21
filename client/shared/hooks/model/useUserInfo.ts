@@ -6,7 +6,7 @@ import { useAsync } from '../useAsync';
  * 用户信息
  */
 export function useCachedUserInfo(
-  userId: string,
+  userId: string | { _id?: string; id?: string; userId?: string } | any,
   refetch = false
 ): UserBaseInfo | Record<string, never> {
   const { value: userInfo = {} } = useAsync(async () => {

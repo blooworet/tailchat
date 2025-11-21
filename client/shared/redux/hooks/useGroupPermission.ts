@@ -12,39 +12,44 @@ export function useGroupMemberAllPermissions(groupId: string): string[] {
   const groupInfo = useGroupInfo(groupId);
   const userId = useUserId();
 
-  if (!groupInfo || !userId) {
-    return [];
-  }
+  const result = useMemo(() => {
+    if (!groupInfo || !userId) {
+      return [];
+    }
 
-  if (groupInfo.owner === userId) {
-    // 群组管理员拥有一切权限
-    // 返回所有权限
-    return getPermissionList().map((p) => p.key);
-  }
+    if (groupInfo.owner === userId) {
+      // 群组管理员拥有一切权限
+      // 返回所有权限
+      return getPermissionList().map((p) => p.key);
+    }
 
-  const members = groupInfo.members;
-
-  const groupRoles = groupInfo.roles;
-  const userRoles = members.find((m) => m.userId === userId)?.roles ?? [];
-  const userPermissions = _uniq([
-    ..._flatten(
-      userRoles.map(
-        (roleId) =>
-          groupRoles.find((role) => String(role._id) === roleId)?.permissions ??
-          []
-      )
-    ),
-    ...groupInfo.fallbackPermissions,
-  ]);
+    const members = groupInfo.members;
+    const groupRoles = groupInfo.roles;
+    const userRoles = members.find((m) => m.userId === userId)?.roles ?? [];
+    
+    return _uniq([
+      ..._flatten(
+        userRoles.map(
+          (roleId) =>
+            groupRoles.find((role) => String(role._id) === roleId)?.permissions ??
+            []
+        )
+      ),
+      ...groupInfo.fallbackPermissions,
+    ]);
+  }, [groupInfo, userId]);
 
   useDebugValue({
-    groupRoles,
-    userRoles,
-    userPermissions,
-    fallbackPermissions: groupInfo.fallbackPermissions,
+    groupId,
+    groupInfo: groupInfo ? {
+      roles: groupInfo.roles,
+      fallbackPermissions: groupInfo.fallbackPermissions,
+    } : null,
+    userId,
+    result,
   });
 
-  return userPermissions;
+  return result;
 }
 
 /**
@@ -58,28 +63,38 @@ export function useGroupPanelMemberAllPermissions(
   const groupInfo = useGroupInfo(groupId);
   const userId = useUserId();
 
-  if (!groupInfo || !userId) {
-    return [];
-  }
+  const result = useMemo(() => {
+    if (!groupInfo || !userId) {
+      return [];
+    }
 
-  const panelInfo = groupInfo.panels.find((p) => p.id === panelId);
-  if (!panelInfo) {
-    return [];
-  }
+    const panelInfo = groupInfo.panels.find((p) => p.id === panelId);
+    if (!panelInfo) {
+      return [];
+    }
 
-  const fallbackPermissions = panelInfo.fallbackPermissions ?? [];
-  const permissionMap = panelInfo.permissionMap ?? {};
-  const specPermissions = permissionMap[userId] ?? [];
+    const fallbackPermissions = panelInfo.fallbackPermissions ?? [];
+    const permissionMap = panelInfo.permissionMap ?? {};
+    const specPermissions = permissionMap[userId] ?? [];
 
-  const userRoles =
-    groupInfo.members.find((m) => m.userId === userId)?.roles ?? []; // 当前用户角色
-  const userPanelPermissions = _uniq([
-    ..._flatten(userRoles.map((roleId) => permissionMap[roleId] ?? [])),
-    ...specPermissions,
-    ...fallbackPermissions,
-  ]);
+    const userRoles =
+      groupInfo.members.find((m) => m.userId === userId)?.roles ?? []; // 当前用户角色
+    
+    return _uniq([
+      ..._flatten(userRoles.map((roleId) => permissionMap[roleId] ?? [])),
+      ...specPermissions,
+      ...fallbackPermissions,
+    ]);
+  }, [groupInfo, userId, panelId]);
 
-  return userPanelPermissions;
+  useDebugValue({
+    groupId,
+    panelId,
+    userId,
+    result,
+  });
+
+  return result;
 }
 
 /**

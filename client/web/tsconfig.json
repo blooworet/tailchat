@@ -6,7 +6,8 @@
       "@/*": ["./src/*"],
       "@test/*": ["./test/*"],
       "@assets/*": ["./assets/*"],
-      "tailchat-design": ["../packages/design/components"]
+      "tailchat-design": ["../packages/design/components"],
+      "tailchat-shared": ["../shared/index.tsx"]
     },
     "typeRoots": ["./node_modules/@types", "./types"]
   },

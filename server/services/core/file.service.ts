@@ -45,6 +45,7 @@ class FileService extends TcService {
     this.registerSetting('accessKey', config.storage.user);
     this.registerSetting('secretKey', config.storage.pass);
     this.registerSetting('pathStyle', config.storage.pathStyle);
+    this.registerSetting('region', process.env.MINIO_REGION || 'us-east-1');
 
     this.registerAction('save', this.save);
     this.registerAction('saveFileWithUrl', this.saveFileWithUrl, {
@@ -119,6 +120,18 @@ class FileService extends TcService {
     >
   ) {
     const t = ctx.meta.t;
+    // Scope: 机器人上传需要 'file.upload'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('file.upload')) {
+          throw new NoPermissionError(t('Bot scope denied: file.upload'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: file.upload'));
+      }
+    }
     this.logger.info('Received upload $params:', ctx.meta.$params);
 
     return new Promise(async (resolve, reject) => {
@@ -141,6 +154,7 @@ class FileService extends TcService {
       });
 
       try {
+        
         const { etag, objectName, url } = await this.saveFileStream(
           ctx,
           originFilename,
@@ -174,6 +188,18 @@ class FileService extends TcService {
   ) {
     const fileUrl = ctx.params.fileUrl;
     const t = ctx.meta.t;
+    // Scope: 机器人拉取保存需要 'file.upload'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('file.upload')) {
+          throw new NoPermissionError(t('Bot scope denied: file.upload'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: file.upload'));
+      }
+    }
 
     if (!isValidStaticAssetsUrl(fileUrl)) {
       throw new Error(t('文件地址不是一个合法的资源地址'));
@@ -217,7 +243,16 @@ class FileService extends TcService {
     fileStream: NodeJS.ReadableStream,
     usage = 'unknown'
   ): Promise<{ etag: string; url: string; objectName: string }> {
-    const span = ctx.startSpan('file.saveFileStream');
+    // 安全的span创建，避免Windows下的Performance API问题
+    let span: any = null;
+    try {
+      if (ctx.startSpan && typeof ctx.startSpan === 'function') {
+        span = ctx.startSpan('file.saveFileStream');
+      }
+    } catch (error) {
+      this.logger.warn('Failed to create span, continuing without tracing:', error.message);
+    }
+
     const ext = path.extname(filename);
 
     // 临时仓库
@@ -242,7 +277,14 @@ class FileService extends TcService {
       usage
     );
 
-    span.finish();
+    // 安全地结束span
+    try {
+      if (span && span.finish && typeof span.finish === 'function') {
+        span.finish();
+      }
+    } catch (error) {
+      this.logger.warn('Failed to finish span:', error.message);
+    }
 
     return {
       etag,
@@ -264,7 +306,16 @@ class FileService extends TcService {
     url: string;
     objectName: string;
   }> {
-    const span = ctx.startSpan('file.persistFile');
+    // 安全的span创建，避免Windows下的Performance API问题
+    let span: any = null;
+    try {
+      if (ctx.startSpan && typeof ctx.startSpan === 'function') {
+        span = ctx.startSpan('file.persistFile');
+      }
+    } catch (error) {
+      this.logger.warn('Failed to create span, continuing without tracing:', error.message);
+    }
+
     const userId = ctx.meta.userId;
 
     // 存储在上传者自己的子目录
@@ -316,7 +367,14 @@ class FileService extends TcService {
         this.logger.error(`持久化到数据库失败: ${objectName}`, err);
       });
 
-    span.finish();
+    // 安全地结束span
+    try {
+      if (span && span.finish && typeof span.finish === 'function') {
+        span.finish();
+      }
+    } catch (error) {
+      this.logger.warn('Failed to finish span:', error.message);
+    }
 
     return {
       url,
@@ -380,6 +438,18 @@ class FileService extends TcService {
     }>
   ) {
     const objectName = ctx.params.objectName;
+    // Scope: 机器人删除需要 'file.delete'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('file.delete')) {
+          throw new NoPermissionError(ctx.meta.t('Bot scope denied: file.delete'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(ctx.meta.t('Bot scope denied: file.delete'));
+      }
+    }
 
     try {
       // 先删文件再删记录，确保文件被删除

@@ -1,6 +1,7 @@
 import { ChatBox } from '@/components/ChatBox';
 import { UserListItem } from '@/components/UserListItem';
-import React from 'react';
+import { FriendRequestBar } from '@/components/FriendRequestBar';
+import React, { useState } from 'react';
 import {
   ChatConverseState,
   t,
@@ -20,6 +21,7 @@ import { DMPluginPanelActionProps, pluginPanelActions } from '@/plugin/common';
 import { CreateDMConverse } from '@/components/modals/CreateDMConverse';
 import { MessageSearchPanel } from '../common/MessageSearch';
 import { ChatInputMentionsContextProvider } from '@/components/ChatBox/ChatInputBox/context';
+import { useNonFriendMembers } from '@/hooks/useFriendStatus';
 
 const ConversePanelTitle: React.FC<{ converse: ChatConverseState }> =
   React.memo(({ converse }) => {
@@ -54,6 +56,10 @@ export const ConversePanel: React.FC<ConversePanelProps> = React.memo(
     const userInfos = useUserInfoList(
       (converse?.members ?? []).filter((m) => m !== userId)
     );
+    
+    // 好友申请栏相关状态
+    const nonFriendMembers = useNonFriendMembers(converse?.members ?? []);
+    const [showFriendRequestBar, setShowFriendRequestBar] = useState(true);
 
     const { hasOpenedPanel, openPanelWindow, closePanelWindow } =
       usePanelWindow(`/panel/personal/converse/${converseId}`);
@@ -159,18 +165,30 @@ export const ConversePanel: React.FC<ConversePanelProps> = React.memo(
           ]);
         }}
       >
-        <ChatInputMentionsContextProvider
-          users={userInfos.map((m) => ({
-            id: m._id,
-            display: m.nickname,
-          }))}
-        >
-          <ChatBox
-            converseId={converseId}
-            converseTitle={converseHeader}
-            isGroup={false}
+        <div className="flex flex-col h-full">
+          {/* 好友申请栏 */}
+          <FriendRequestBar
+            nonFriendUserIds={nonFriendMembers}
+            visible={showFriendRequestBar && nonFriendMembers.length > 0}
+            onClose={() => setShowFriendRequestBar(false)}
           />
-        </ChatInputMentionsContextProvider>
+          
+          {/* 聊天区域 */}
+          <div className="flex-1 overflow-hidden">
+            <ChatInputMentionsContextProvider
+              users={userInfos.map((m) => ({
+                id: m._id,
+                display: m.nickname,
+              }))}
+            >
+              <ChatBox
+                converseId={converseId}
+                converseTitle={converseHeader}
+                isGroup={false}
+              />
+            </ChatInputMentionsContextProvider>
+          </div>
+        </div>
       </CommonPanelWrapper>
     );
   }

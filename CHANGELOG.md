@@ -1,4 +1,29 @@
 
+## [Unreleased]
+
+### Added
+- **斜杠命令系统**: 全新的 Telegram 风格斜杠命令体验
+  - 支持 `/` 触发命令列表，实时搜索和过滤
+  - 内置 7 个系统命令：`/help`, `/clear`, `/me`, `/shrug`, `/tableflip`, `/unflip`, `/version`
+  - 完整的插件 API，支持自定义命令注册
+  - 机器人命令自动集成和管理
+  - 现代化 UI 设计，支持深色模式和响应式布局
+  - 完整的键盘导航和无障碍支持
+  - 命令执行统计和性能监控
+  - 类型安全的 TypeScript API
+
+### Enhanced
+- **聊天输入框**: 扩展 `react-mentions` 系统支持斜杠命令触发器
+- **插件系统**: 新增斜杠命令注册和管理 API
+- **主题系统**: 添加斜杠命令相关的 CSS 变量和深色模式支持
+
+### Technical
+- 新增 `SlashCommandRegistry` 命令注册中心
+- 新增 `SlashCommandExecutor` 命令执行引擎  
+- 新增 `BotCommandManager` 机器人命令管理器
+- 新增 `useSlashCommands` React Hook
+- 完整的单元测试和集成测试覆盖
+- 性能优化：支持 1000+ 命令的高效管理和搜索
 
 ## [1.11.10](https://github.com/msgbyte/tailchat/compare/v1.11.9...v1.11.10) (2025-01-02)
 

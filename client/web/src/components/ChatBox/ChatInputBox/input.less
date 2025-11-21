@@ -1,34 +1,190 @@
 .chatbox-mention-input {
-  @apply shadow-none border-0 px-4 py-2 relative;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  width: 100%;
+  min-height: 20px;
+  max-height: 120px;
+  line-height: 20px;
+  font-size: 14px;
+  color: var(--tc-content-color);
+  
+  /* 移除 Telegram 主题下可能出现的蓝色边框/背景 */
+  box-shadow: none !important;
+  border: none !important;
+
+  /* ✅ Telegram 主题下的粗大输入框样式 */
+  :global(.theme-telegram) & {
+    font-size: 16px;
+    line-height: 24px;
+    min-height: 24px;
+    padding: 4px 0;
+  }
 
   &__control {
-    @apply relative;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 
   &__input {
-    @apply outline-none;
-  }
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    color: var(--tc-content-color);
+    font-size: 14px;
+    line-height: 20px;
+    box-shadow: none !important;
 
-  &__highlighter--singleLine {
-    @apply whitespace-nowrap h-6 !important;
+    /* ✅ Telegram 主题下的粗大输入框样式 */
+    :global(.theme-telegram) & {
+      font-size: 16px;
+      line-height: 24px;
+    }
   }
 
   &__suggestions {
-    @apply bg-transparent !important;
-
-    &__list {
-      @apply border border-gray-500 bg-content-light dark:bg-content-dark rounded overflow-auto absolute;
-      max-height: 60vh;
-      min-width: 240px;
-      bottom: 14px;
-    }
+    position: absolute;
+    z-index: 1000;
+    background: var(--tc-background-color);
+    border: 1px solid var(--tc-border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 200px;
+    overflow-y: auto;
+    min-width: 200px;
+    
+    /* 斜杠命令现在使用内嵌展开方案，不再需要特殊样式 */
 
     &__item {
-      @apply rounded;
+      border-radius: 4px;
 
       &--focused {
-        @apply bg-black bg-opacity-20 dark:bg-white dark:bg-opacity-20;
+        background-color: rgba(0, 0, 0, 0.1);
+        
+        /* 斜杠命令焦点样式 */
+        &.slash-command-focused {
+          background-color: var(--tc-primary-color-light);
+          border-color: var(--tc-primary-color);
+        }
       }
     }
+  }
+}
+
+/* 斜杠命令列表动画 */
+.slash-command-enter {
+  animation: slideUpFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slash-command-exit {
+  animation: slideDownFadeOut 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 动画关键帧 */
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* 隐藏滚动条 */
+.scrollbar-hide {
+  /* Firefox */
+  scrollbar-width: none;
+  
+  /* Safari and Chrome */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 命令项悬停效果增强 */
+.chatbox-mention-input__suggestions__item.slash-command-item {
+  transition: all 0.15s ease-out;
+  
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* 键盘导航视觉反馈增强 */
+.chatbox-mention-input__suggestions__item--focused.slash-command-item {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  border-radius: 4px;
+}
+
+/* ✅ 命令列表展开动画 */
+@keyframes commandListFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: commandListFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+/* ✅ 命令项样式优化 - Telegram 风格（扁平化） */
+.command-list-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+  border-radius: 4px;
+  margin: 0 0.25rem;
+  min-height: 36px; /* ✅ 确保单行高度一致 */
+
+  &:hover {
+    background-color: var(--tc-background-light);
+  }
+  
+  &:active {
+    background-color: var(--tc-background-lighter);
+  }
+}
+
+/* === Mobile keyboard performance optimizations === */
+.mobile-optimized.keyboard-showing {
+  /* 禁止命令列表在键盘动画期使用动画，避免额外回流/重绘 */
+  .command-list-container,
+  .slash-command-enter,
+  .slash-command-exit,
+  .animate-slideDown {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* 减少浮层阴影开销 */
+  .chatbox-mention-input__suggestions {
+    box-shadow: none !important;
   }
 }

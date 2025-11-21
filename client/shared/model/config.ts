@@ -1,4 +1,4 @@
-import { request } from '../api/request';
+import { getOrCreateSocket } from '../api/socket';
 import { useGlobalConfigStore } from '../store/globalConfig';
 import { defaultGlobalConfig } from '../utils/consts';
 
@@ -76,6 +76,19 @@ export interface GlobalConfig {
         text: string;
         link?: string;
       };
+  /** TailProto 客户端首选项（由服务端或客户端本地决定） */
+  tailprotoPreferred?: boolean;
+  tailprotoRequired?: boolean;
+  tailprotoCipher?: string;
+  // TailProto client-side knobs (optional, provided by server)
+  tailprotoWindowSize?: number;
+  tailprotoRetransmitTimeoutMs?: number;
+  tailprotoBatchEnabled?: boolean;
+  tailprotoBatchMaxItems?: number;
+  tailprotoBatchMaxDelayMs?: number;
+  tailprotoRekeyIntervalMs?: number;
+  tailprotoRekeySeqThreshold?: number;
+  tailprotoRekeyAcceptOldMs?: number;
 }
 
 export function getGlobalConfig(): GlobalConfig {
@@ -83,7 +96,8 @@ export function getGlobalConfig(): GlobalConfig {
 }
 
 export async function fetchGlobalClientConfig(): Promise<GlobalConfig> {
-  const { data: config } = await request.get('/api/config/client');
+  const socket = await getOrCreateSocket(); // 游客模式获取配置是允许的
+  const config = await socket.request<GlobalConfig>('config.client');
 
   useGlobalConfigStore.setState({
     ...defaultGlobalConfig,

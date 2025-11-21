@@ -10,6 +10,7 @@ export const ServiceChecker: React.FC<React.PropsWithChildren> = React.memo(
   (props) => {
     const { loading, value: enabled } = useAsync(async () => {
       const services = await fetchAvailableServices();
+      // 检查openapi.app服务是否可用
       return services.includes('openapi.app');
     }, []);
 

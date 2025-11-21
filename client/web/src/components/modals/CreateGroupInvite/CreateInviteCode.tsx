@@ -14,7 +14,8 @@ import {
   showToasts,
 } from 'tailchat-shared';
 import { EditGroupInvite } from '../EditGroupInvite';
-import styles from './CreateInviteCode.module.less';
+// 样式已在全局样式中导入，避免CSS顺序冲突
+const styles = require('./CreateInviteCode.module.less');
 
 enum InviteCodeType {
   Normal = 'normal',

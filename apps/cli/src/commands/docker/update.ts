@@ -32,6 +32,11 @@ export const dockerUpdateCommand: CommandModule = {
             return;
           }
 
+          if (!stream) {
+            reject(new Error('Stream is undefined'));
+            return;
+          }
+
           spinner.info('The remote image has been found, start downloading');
 
           docker.modem.followProgress(

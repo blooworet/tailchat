@@ -9,6 +9,7 @@ import { PersonalConverse } from './Converse';
 import { FriendPanel } from './Friends';
 import { PluginsPanel } from './Plugins';
 import { PersonalSidebar } from './Sidebar';
+import { GroupInvites } from './GroupInvites';
 import { useGlobalConfigStore } from 'tailchat-shared';
 
 export const Personal: React.FC = React.memo(() => {
@@ -28,6 +29,7 @@ export const Personal: React.FC = React.memo(() => {
     <PageContent data-tc-role="content-personal" sidebar={<PersonalSidebar />}>
       <Routes>
         <Route path="/friends" element={<FriendPanel />} />
+        <Route path="/group-invites" element={<GroupInvites />} />
         {!disablePluginStore && (
           <Route path="/plugins" element={<PluginsPanel />} />
         )}

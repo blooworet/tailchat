@@ -12,6 +12,14 @@ export const ChatMessageList: React.FC<MessageListProps> = React.memo(
       false
     );
 
+    const isMobile =
+      typeof window !== 'undefined' &&
+      ((window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+        window.innerWidth <= 768 ||
+        /android|iphone|ipad|ipod|iemobile|opera mini/i.test(
+          (navigator.userAgent || '').toLowerCase()
+        ));
+
     if (loading) {
       return (
         <div className="flex-1">
@@ -20,7 +28,9 @@ export const ChatMessageList: React.FC<MessageListProps> = React.memo(
       );
     }
 
-    return useVirtualizedList ? (
+    const shouldVirtualize = isMobile ? true : useVirtualizedList;
+
+    return shouldVirtualize ? (
       <VirtualizedMessageList {...props} />
     ) : (
       <NormalMessageList {...props} />

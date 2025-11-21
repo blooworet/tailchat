@@ -335,6 +335,15 @@ declare module '@capital/common' {
     eventFn: (...args: any[]) => void;
   }) => void;
 
+  /**
+   * 注册原始 Socket 事件监听器（不添加 'notify:' 前缀）
+   * 用于监听服务端直接广播的事件，如 'openapi.command.updated'
+   */
+  export const regRawSocketEventListener: (item: {
+    eventName: string;
+    eventFn: (...args: any[]) => void;
+  }) => void;
+
   export const pluginColorScheme: any;
 
   export const regPluginColorScheme: any;

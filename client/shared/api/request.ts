@@ -1,4 +1,5 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 import _get from 'lodash/get';
 import _isFunction from 'lodash/isFunction';
 import { t } from '../i18n';
@@ -35,8 +36,13 @@ function createRequest() {
       ['post', 'get'].includes(String(val.method).toLowerCase()) &&
       !val.headers['X-Token']
     ) {
-      // 任何请求都尝试增加token
-      val.headers['X-Token'] = await tokenGetter();
+      // 仅当 token 为非空字符串时才附加，避免出现 'null'/'undefined' 字面量
+      try {
+        const tok = await tokenGetter();
+        if (typeof tok === 'string' && tok.length > 0) {
+          val.headers['X-Token'] = tok;
+        }
+      } catch {}
     }
 
     return val;

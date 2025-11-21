@@ -1,0 +1,7 @@
+{
+  "type": "record",
+  "name": "TailProtoEnvelopeToken",
+  "fields": [
+    { "name": "token", "type": "string" }
+  ]
+}

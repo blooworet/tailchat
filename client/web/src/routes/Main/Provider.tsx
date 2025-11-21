@@ -7,6 +7,9 @@ import {
   ReduxProvider,
   UserLoginInfo,
   getReduxStore,
+  fetchGlobalClientConfig,
+  isProduction,
+  version,
 } from 'tailchat-shared';
 import React, { PropsWithChildren } from 'react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -15,7 +18,7 @@ import _isNil from 'lodash/isNil';
 import { useNavigate } from 'react-router';
 import { SidebarContextProvider } from './SidebarContext';
 import { PortalHost } from '@/components/Portal';
-import { setGlobalSocket, setGlobalStore } from '@/utils/global-state-helper';
+import { setGlobalStore, setGlobalSocket } from '@/utils/global-state-helper';
 import { SocketContextProvider } from '@/context/SocketContext';
 import { Problem } from '@/components/Problem';
 import { KeepAliveOverlayHost } from '@/components/KeepAliveOverlay';
@@ -45,12 +48,34 @@ function useAppState() {
     store.dispatch(userActions.setUserInfo(userLoginInfo));
     setGlobalStore(store);
 
-    // 创建 websocket 连接
+    // 创建 websocket 连接 - 使用shared版本的socket管理
     const socket = await createSocket(userLoginInfo.token);
+    // 由于移除了TailProto加密，需要手动设置全局socket
     setGlobalSocket(socket);
 
     // 初始化Redux
     setupRedux(socket, store);
+
+    // 登录后加载全局配置（含 A/B 开关）
+    try {
+      const config = await fetchGlobalClientConfig();
+      try {
+        const ab: any = (config as any)?.ab || {};
+        const w: any = window as any;
+        w.__TC_AB = Object.assign({}, w.__TC_AB || {}, ab);
+        const overrideKeys = [
+          'inline_defer',
+          'keyboard_defer',
+        ];
+        overrideKeys.forEach((k) => {
+          const v = window.localStorage.getItem(`tc_ab_${k}`);
+          if (v === 'true') w.__TC_AB[k] = true;
+          if (v === 'false') w.__TC_AB[k] = false;
+        });
+      } catch {}
+    } catch (e) {
+      console.error('[Provider] 全局配置加载失败', e);
+    }
 
     return { store, socket };
   }, []);

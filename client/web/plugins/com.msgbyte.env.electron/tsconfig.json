@@ -2,7 +2,7 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react",
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": true,
     "paths": {
       "@capital/*": ["../../src/plugin/*"],
     }

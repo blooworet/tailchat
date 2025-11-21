@@ -1,0 +1,21 @@
+groups:
+  - name: botfather-alerts
+    interval: 1m
+    rules:
+      - alert: BotFatherCommandErrorSpike
+        expr: increase(botfather_command_error_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BotFather command errors spiking"
+          description: "botfather_command_error_total increased more than 10 in 5m"
+
+      - alert: BotFatherTokenIssueSurge
+        expr: increase(botfather_token_issue_total[5m]) > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unusual surge in token issuance"
+          description: "botfather_token_issue_total increased more than 50 in 5m"

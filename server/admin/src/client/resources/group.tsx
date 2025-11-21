@@ -91,7 +91,7 @@ export const UserSelector: React.FC<{ onChange: (val: Identifier) => void }> =
         onChange={handleChange}
         options={{
           displayField: (record) =>
-            `${record.nickname}#${record.discriminator}`,
+            record?.username ? `@${record.username} (${record.nickname})` : record.nickname,
           reference: 'users',
         }}
       />

@@ -74,7 +74,7 @@ export function call(ctx: TcPureContext) {
     /**
      * 添加群组系统信息
      */
-    async addGroupSystemMessage(groupId: string, message: string) {
+    async addGroupSystemMessage(groupId: string, message: string, meta?: object) {
       const lobbyConverseId = await call(ctx).getGroupLobbyConverseId(groupId);
 
       if (!lobbyConverseId) {
@@ -88,6 +88,7 @@ export function call(ctx: TcPureContext) {
           converseId: lobbyConverseId,
           groupId: groupId,
           content: message,
+          meta,
         },
         {
           meta: {

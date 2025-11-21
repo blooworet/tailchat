@@ -73,6 +73,34 @@ class FriendService extends TcService {
       throw new Error(t('对方已经是您的好友, 不能再次添加'));
     }
 
+    // 检查目标用户是否为机器人
+    try {
+      const targetUser = await ctx.call('user.getUserInfo', { userId: to });
+      
+      // 如果目标是机器人（pluginBot 或 openapiBot），直接建立好友关系
+      if (targetUser && ((targetUser as any).type === 'pluginBot' || (targetUser as any).type === 'openapiBot')) {
+        // 直接建立好友关系，跳过等待确认
+        await ctx.call('friend.buildFriendRelation', {
+          user1: from,
+          user2: to,
+        });
+
+        // 返回自动接受的好友请求信息
+        return {
+          _id: null, // 没有实际的请求记录
+          from,
+          to,
+          message,
+          autoAccepted: true, // 标记为自动接受
+          createdAt: new Date(),
+        };
+      }
+    } catch (e) {
+      // 如果获取用户信息失败，继续按正常流程处理
+      this.broker.logger.warn('Failed to check if target is bot, proceeding with normal friend request:', e);
+    }
+
+    // 正常用户：创建好友请求等待确认
     const doc = await this.adapter.insert({
       from,
       to,
@@ -109,7 +137,7 @@ class FriendService extends TcService {
 
     const request: FriendRequest = await this.adapter.findById(requestId);
     if (_.isNil(request)) {
-      throw new DataNotFoundError('该好友请求未找到');
+      throw new DataNotFoundError(ctx.meta.t('该好友请求未找到'));
     }
 
     if (ctx.meta.userId !== String(request.to)) {
@@ -131,6 +159,20 @@ class FriendService extends TcService {
         requestId,
       }
     );
+
+    // 兜底：确保 DM 已加入双方 dmlist（若上游已处理则此处无副作用）
+    try {
+      const ensureRes: { converseId: string } = await ctx.call(
+        'chat.converse.ensureDMWithUser',
+        { userId: String(request.from) },
+        { meta: { ...ctx.meta, userId: String(request.to) } }
+      );
+      const cid = String((ensureRes as any)?.converseId || '');
+      if (cid) {
+        try { await ctx.call('user.dmlist.addConverse', { converseId: cid }, { meta: { ...ctx.meta, userId: String(request.to) } }); } catch {}
+        try { await ctx.call('user.dmlist.addConverse', { converseId: cid }, { meta: { ...ctx.meta, userId: String(request.from) } }); } catch {}
+      }
+    } catch {}
   }
 
   /**
@@ -141,7 +183,7 @@ class FriendService extends TcService {
 
     const request: FriendRequest = await this.adapter.findById(requestId);
     if (_.isNil(request)) {
-      throw new DataNotFoundError('该好友请求未找到');
+      throw new DataNotFoundError(ctx.meta.t('该好友请求未找到'));
     }
 
     if (ctx.meta.userId !== String(request.to)) {
@@ -168,7 +210,7 @@ class FriendService extends TcService {
 
     const request: FriendRequest = await this.adapter.findById(requestId);
     if (_.isNil(request)) {
-      throw new DataNotFoundError('该好友请求未找到');
+      throw new DataNotFoundError(ctx.meta.t('该好友请求未找到'));
     }
 
     if (ctx.meta.userId !== String(request.from)) {

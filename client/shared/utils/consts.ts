@@ -31,4 +31,11 @@ export const defaultGlobalConfig: GlobalConfig = {
   disableAddFriend: false,
   disableTelemetry: false,
   announcement: false,
+  // TailProto defaults
+  tailprotoPreferred: true,
+  tailprotoRequired: false,
+  tailprotoCipher: 'aes-gcm',
+  tailprotoBatchEnabled: false,
+  tailprotoBatchMaxItems: 10,
+  tailprotoBatchMaxDelayMs: 15,
 };

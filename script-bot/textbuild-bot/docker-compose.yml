@@ -1,0 +1,76 @@
+# ================================================
+# Docker Compose for TextBuild Bot
+# 文字制作机器人 Docker Compose 配置
+# ================================================
+
+version: '3.8'
+
+services:
+  tailchat-textbuild-bot:
+    # 镜像名称
+    image: tailchat-textbuild-bot:latest
+    
+    # 容器名称
+    container_name: tailchat-textbuild-bot
+    
+    # 构建配置
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    # 自动重启策略
+    # - no: 不自动重启
+    # - always: 总是重启
+    # - on-failure: 失败时重启
+    # - unless-stopped: 除非手动停止，否则总是重启
+    restart: unless-stopped
+    
+    # 环境变量文件（挂载 .env 到容器）
+    volumes:
+      - ./.env:/app/.env:ro  # ro = read-only（只读）
+    
+    # 资源限制（可选，防止占用过多资源）
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # 网络配置
+    networks:
+      - tailchat-internal
+    
+    # 依赖服务（如果需要等待 Tailchat 启动）
+    # depends_on:
+    #   - tailchat-server
+    
+    # 额外主机映射（访问宿主机服务）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+    # 健康检查（可选）
+    # healthcheck:
+    #   test: ["CMD", "node", "-e", "process.exit(0)"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
+
+# 网络配置
+networks:
+  tailchat-internal:
+    # 使用外部网络（与 Tailchat 共享）
+    external: true
+    # 或创建新网络
+    # driver: bridge
+

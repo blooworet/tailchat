@@ -40,7 +40,10 @@ export function initNotify() {
 
   sharedEvent.on('receiveUnmutedMessage', (message) => {
     const currentUserId = getGlobalState()?.user.info._id;
-
+    // 若用户信息尚未就绪，避免误判为他人消息导致提示音
+    if (!currentUserId || !message || !message.author) {
+      return;
+    }
     if (currentUserId === message.author) {
       // 忽略本人消息
       return;
@@ -63,7 +66,7 @@ export function initNotify() {
           const content = getMessageTextDecorators().serialize(message.content); // 只显示无富文本形式的消息
 
           const title = `${Translate.from} [${scopeName}] ${nickname}`;
-          const options: NotificationOptions = {
+          const options: any = {
             body: content,
             icon,
             tag: TAG,
@@ -131,7 +134,17 @@ sharedEvent.on('userSettingsUpdate', (settings) => {
 });
 
 /**
- * 尝试播放通知声音
+ * 获取通知音频路径（默认使用 Telegram 提示音）
+ */
+function getNotificationSoundPath(): { primary: string; fallback: string } {
+  return {
+    primary: '/plugins/com.msgbyte.notify/assets/notification.mp3',
+    fallback: '/plugins/com.msgbyte.notify/assets/sounds_bing.mp3',
+  };
+}
+
+/**
+ * 尝试播放通知声音（带主题自适应和回退机制）
  */
 async function tryPlayNotificationSound() {
   if (_get(userSettings, PLUGIN_SYSTEM_SETTINGS_DISABLED_SOUND) === true) {
@@ -139,12 +152,22 @@ async function tryPlayNotificationSound() {
     return;
   }
 
+  const soundPaths = getNotificationSoundPath();
+  
+  // 首先尝试播放主要音频
   try {
-    const audio = new Audio(
-      '/plugins/com.msgbyte.notify/assets/sounds_bing.mp3'
-    );
+    const audio = new Audio(soundPaths.primary);
     await audio.play();
+    return;
   } catch (err) {
-    console.error(err);
+    console.warn('[Notify] 主要提示音播放失败，尝试回退音频:', err);
+  }
+
+  // 如果主要音频失败，尝试回退音频
+  try {
+    const fallbackAudio = new Audio(soundPaths.fallback);
+    await fallbackAudio.play();
+  } catch (err) {
+    console.error('[Notify] 所有提示音播放失败:', err);
   }
 }

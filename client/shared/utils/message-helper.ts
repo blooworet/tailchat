@@ -11,6 +11,17 @@ import _pick from 'lodash/pick';
 const replyMsgFields = ['_id', 'content', 'author'] as const;
 export type ReplyMsgType = Pick<ChatMessage, typeof replyMsgFields[number]>;
 
+// Forwarded message metadata (minimal cross-conversation locator)
+// Stored under meta.forward
+const forwardMsgFields = ['_id', 'author', 'converseId', 'groupId'] as const;
+export type ForwardMsgType = Pick<
+  ChatMessage,
+  typeof forwardMsgFields[number]
+> & {
+  // optional title/source label if provided by upstream
+  sourceTitle?: string;
+};
+
 export class MessageHelper {
   private payload: SendMessagePayload;
 
@@ -36,6 +47,32 @@ export class MessageHelper {
     }
 
     _set(this.payload, ['meta', 'reply'], _pick(replyMsg, replyMsgFields));
+  }
+
+  /**
+   * Forwarded message helpers
+   */
+  hasForward(): ForwardMsgType | false {
+    const forward = _get(this.payload, ['meta', 'forward']);
+    if (_isNil(forward)) {
+      return false;
+    }
+
+    // provide a narrowed object with known fields; keep sourceTitle if present
+    const picked = _pick(forward, [...forwardMsgFields, 'sourceTitle']);
+    return picked as ForwardMsgType;
+  }
+
+  setForwardMsg(forwardMsg: ForwardMsgType) {
+    if (_isNil(forwardMsg)) {
+      return;
+    }
+
+    _set(
+      this.payload,
+      ['meta', 'forward'],
+      _pick(forwardMsg, [...forwardMsgFields, 'sourceTitle'])
+    );
   }
 
   /**

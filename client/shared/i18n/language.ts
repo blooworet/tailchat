@@ -5,7 +5,7 @@ import { AllowedLanguage, setLanguage as setI18NLanguage } from './index';
 import { getStorage, useStorage } from '../manager/storage';
 import { LANGUAGE_KEY } from '../utils/consts';
 
-export const defaultLanguage = 'en-US';
+export const defaultLanguage = 'zh-CN';
 
 function getNavigatorLanguage(): AllowedLanguage {
   if (!navigator.language) {
@@ -19,7 +19,12 @@ function getNavigatorLanguage(): AllowedLanguage {
  * Get current language
  */
 async function getLanguage(): Promise<string> {
-  return await getStorage().get(LANGUAGE_KEY, getNavigatorLanguage());
+  try {
+    return await getStorage().get(LANGUAGE_KEY, getNavigatorLanguage());
+  } catch (error) {
+    // 如果 storage 未注册（在启动阶段可能发生），则返回导航器语言
+    return getNavigatorLanguage();
+  }
 }
 
 /**
@@ -61,7 +66,12 @@ export function useLanguage() {
  * @param lang Language Code
  */
 export async function saveLanguage(lang: string) {
-  await getStorage().save(LANGUAGE_KEY, lang);
+  try {
+    await getStorage().save(LANGUAGE_KEY, lang);
+  } catch (error) {
+    // 如果 storage 未注册，则忽略此错误
+    console.warn('Failed to save language:', error);
+  }
 }
 
 /**

@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     env_file: docker-compose.env
     environment:
-      SERVICES: core/gateway,core/user/*.service.js,core/group/*.service.js,core/chat/*.service.js,core/file,core/plugin/registry,core/config
+      SERVICES: core/gateway,core/user/user.service.js,core/user/publicUser.service.js,core/user/*.service.js,core/group/*.service.js,core/chat/*.service.js,core/file,core/plugin/registry,core/config
       PORT: 3000
     depends_on:
       - mongo
@@ -37,10 +37,32 @@ services:
       - mongo
       - redis
       - minio
+      - service-core
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.openapi-oidc.rule=PathPrefix(`/open`)"
       - "traefik.http.services.openapi-oidc.loadbalancer.server.port=3003"
+    networks:
+      - internal
+
+  # Services (Additional Services like inline.action)
+  service-additional:
+    build:
+      context: .
+    image: tailchat
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICEDIR: services
+    depends_on:
+      - mongo
+      - redis
+      - minio
+      - service-openapi
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - internal
 
@@ -57,6 +79,7 @@ services:
       - mongo
       - redis
       - minio
+      - service-additional
     networks:
       - internal
 
@@ -65,7 +88,7 @@ services:
     image: mongo:4
     restart: on-failure
     volumes:
-      - data:/data/db
+      - ./data:/data/db
     networks:
       - internal
 
@@ -78,7 +101,7 @@ services:
 
   # Persist Storage
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z
     restart: on-failure
     networks:
       - internal
@@ -86,7 +109,7 @@ services:
       MINIO_ROOT_USER: tailchat
       MINIO_ROOT_PASSWORD: com.msgbyte.tailchat
     volumes:
-      - storage:/data
+      - ./storage:/data
     command: minio server /data --console-address ":9001"
 
   # Router

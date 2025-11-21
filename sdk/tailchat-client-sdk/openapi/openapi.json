@@ -1,0 +1,765 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Tailchat OpenAPI (SDK base.ts 子集)",
+    "version": "1.0.0",
+    "description": "Tailchat 开放平台（机器人）HTTP 接口。说明：所有接口均通过请求头 X-App-Secret 鉴权（必须为 \"appId:secret\" 组合），无需用户登录 JWT。",
+    "contact": {
+      "name": "Tailchat Team",
+      "url": "https://tailchat.msgbyte.com",
+      "email": "support@msgbyte.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:11000",
+      "description": "local"
+    }
+  ],
+  "tags": [
+    {
+      "name": "openapi.bot",
+      "description": "机器人直连接口（HTTP-only，使用 X-App-Secret 认证）"
+    },
+    {
+      "name": "openapi.app",
+      "description": "开放平台应用配置/命令管理接口（使用 X-App-Secret 认证）"
+    }
+  ],
+  "paths": {
+    "/api/openapi/bot/whoami": {
+      "get": {
+        "summary": "获取机器人身份",
+        "description": "返回当前 AppSecret 对应机器人的基本信息（_id, nickname, email, avatar）",
+        "tags": ["openapi.bot"],
+        "operationId": "openapiBotWhoami",
+        "security": [ { "AppSecretHeader": [] } ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BotIdentity" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/openapi/bot/deleteMessage": {
+      "post": {
+        "summary": "删除消息",
+        "description": "删除已有消息",
+        "tags": ["openapi.bot"],
+        "operationId": "openapiBotDeleteMessage",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "messageId": { "type": "string" } },
+                "required": ["messageId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "type": "boolean", "example": true } } } },
+          "401": { "description": "未授权" },
+          "403": { "description": "权限不足" },
+          "404": { "description": "消息不存在" }
+        }
+      }
+    },
+    "/api/openapi/bot/ensureDMWithUser": {
+      "post": {
+        "summary": "确保与某用户存在私聊",
+        "description": "若没有现有私聊会话，则创建并返回可用的私聊通道",
+        "tags": ["openapi.bot"],
+        "operationId": "openapiBotEnsureDMWithUser",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                "type": "object",
+                "properties": { "userId": { "type": "string" } },
+                "required": ["userId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "type": "object", "properties": { "converseId": { "type": "string", "description": "私信会话ID" } }, "required": ["converseId"] } } } },
+          "400": { "description": "参数错误" },
+          "401": { "description": "未授权" },
+          "403": { "description": "权限不足" }
+        }
+      }
+    },
+    "/api/openapi/bot/sendMessage": {
+      "post": {
+        "summary": "发送消息",
+        "description": "向会话发送文本消息，可选携带富文本 meta（含内联按钮等）",
+        "tags": ["openapi.bot"],
+        "operationId": "openapiBotSendMessage",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "converseId": { "type": "string", "description": "目标会话ID（必填）" },
+                  "groupId": { "type": "string", "description": "群组ID（可选）" },
+                  "content": { "type": "string", "description": "消息内容（BBCode/纯文本）" },
+                  "plain": { "type": "string", "description": "纯文本内容（用于搜索/通知）" },
+                  "meta": { "$ref": "#/components/schemas/MessageMeta" }
+                },
+                "required": ["converseId", "content"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Message" } } } },
+          "400": { "description": "参数错误" },
+          "401": { "description": "未授权（AppSecret 无效）" },
+          "403": { "description": "权限不足（scope 校验失败/禁言等）" },
+          "404": { "description": "资源不存在" }
+        }
+      }
+    },
+    "/api/openapi/bot/editMessage": {
+      "post": {
+        "summary": "编辑消息",
+        "description": "编辑已发送的消息文本与元数据（如更新内联按钮）",
+        "tags": ["openapi.bot"],
+        "operationId": "openapiBotEditMessage",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                "type": "object",
+                  "properties": {
+                  "messageId": { "type": "string", "description": "消息ID（必填）" },
+                  "content": { "type": "string", "description": "新文本内容（可选）" },
+                  "meta": { "$ref": "#/components/schemas/MessageMeta" }
+                },
+                "required": ["messageId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Message" } } } },
+          "400": { "description": "参数错误" },
+          "401": { "description": "未授权（AppSecret 无效）" },
+          "403": { "description": "权限不足" },
+          "404": { "description": "消息不存在" }
+        }
+      }
+    },
+    "/api/openapi/bot/answerCallbackQuery": {
+      "post": {
+        "summary": "回答按钮回调（Toast/弹窗）",
+        "description": "仅对点击该按钮的用户展示提示文本（不编辑消息）。触发来源可为带有优先级样式的按钮（priority 支持 primary/secondary/danger/success）。",
+        "tags": ["openapi.bot"],
+        "operationId": "openapiBotAnswerCallbackQuery",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appSecret": { "type": "string", "description": "应用密钥（必须为 appId:secret 组合；即便 Header 已携带，此处仍需提供）" },
+                  "traceId": { "type": "string", "description": "按钮回调的追踪ID（SDK 会自动携带）" },
+                  "userId": { "type": "string", "description": "点击按钮的用户ID" },
+                  "text": { "type": "string", "maxLength": 200, "description": "提示文本（≤200字）" },
+                  "show_alert": { "type": "boolean", "description": "是否以弹窗显示（默认false）" },
+                  "cache_time": { "type": "number", "description": "可选：缓存时间（秒，预留字段）" }
+                },
+                "required": ["appSecret", "traceId", "userId", "text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功" }
+        }
+      }
+    },
+    "/api/openapi/app/setAppBotInfo": {
+      "post": {
+        "summary": "设置机器人信息/能力",
+        "description": "配置回调地址、用户名、是否允许加入群、注册命令等",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppSetAppBotInfo",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fieldName": {
+                    "type": "string",
+                    "enum": ["callbackUrl", "username", "allowGroup", "commands", "receiveAllGroupMessages"]
+                  },
+                  "fieldValue": {
+                    "oneOf": [
+                      { "type": "string" },
+                      { "type": "boolean" },
+                      { "type": "array", "items": { "$ref": "#/components/schemas/BotCommand" } }
+                    ]
+                  }
+                },
+                "required": ["fieldName", "fieldValue"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "400": { "description": "参数错误" },
+          "401": { "description": "未授权" },
+          "403": { "description": "权限不足" }
+        }
+      }
+    },
+    "/api/openapi/app/getBotCommandMeta": {
+      "post": {
+        "summary": "获取命令元信息（版本/etag）",
+        "description": "用于客户端做命令缓存协商（If-Version/If-Etag）。",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppGetBotCommandMeta",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "appId": { "type": "string" } },
+                "required": ["appId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BotCommandMeta" } } } },
+          "401": { "description": "未授权" },
+          "404": { "description": "应用不存在" }
+        }
+      }
+    },
+    "/api/openapi/app/getBotCommandsByUserIds": {
+      "post": {
+        "summary": "按机器人用户ID获取命令（前端按需加载）",
+        "description": "传入机器人用户ID列表（建议单个调用），并附带当前会话上下文以按 scope 过滤。支持 If-Version/If-Etag 协商返回。",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppGetBotCommandsByUserIds",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "botUserIds": { "type": "array", "items": { "type": "string" }, "description": "建议每次仅传 1 个" },
+                  "converseId": { "type": "string" },
+                  "groupId": { "type": "string" },
+                  "ifVersion": { "type": "number" },
+                  "ifEtag": { "type": "string" }
+                },
+                "required": ["botUserIds", "converseId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/BotCommandsForBotUser" } } } } },
+          "401": { "description": "未授权" }
+        }
+      }
+    },
+    "/api/openapi/app/setAppInfo": {
+      "post": {
+        "summary": "设置应用信息",
+        "description": "仅允许修改 appName/appDesc/appIcon。需要开发者身份，使用 X-App-Secret 鉴权。",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppSetAppInfo",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": { "type": "string" },
+                  "appSecret": { "type": "string" },
+                  "fieldName": { "type": "string", "enum": ["appName", "appDesc", "appIcon"] },
+                  "fieldValue": { "type": "string" }
+                },
+                "required": ["fieldName", "fieldValue"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "400": { "description": "参数错误" },
+          "401": { "description": "未授权" },
+          "403": { "description": "权限不足" }
+        }
+      }
+    },
+    "/api/openapi/app/setAppCapability": {
+      "post": {
+        "summary": "设置应用能力",
+        "description": "覆盖应用启用能力列表（如 bot 等）。仅应用所有者可操作。",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppSetAppCapability",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": { "type": "string" },
+                  "appSecret": { "type": "string" },
+                  "capability": { "type": "array", "items": { "type": "string" } }
+                },
+                "required": ["capability"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "401": { "description": "未授权" },
+          "403": { "description": "权限不足" }
+        }
+      }
+    },
+    "/api/openapi/app/setAppOAuthInfo": {
+      "post": {
+        "summary": "设置 OAuth 信息",
+        "description": "目前仅支持设置 redirectUrls 数组。",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppSetAppOAuthInfo",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": { "type": "string" },
+                  "appSecret": { "type": "string" },
+                  "fieldName": { "type": "string", "enum": ["redirectUrls"] },
+                  "fieldValue": { "type": "array", "items": { "type": "string" } }
+                },
+                "required": ["fieldName", "fieldValue"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "401": { "description": "未授权" },
+          "403": { "description": "权限不足" }
+        }
+      }
+    },
+    "/api/openapi/app/getBotCommands": {
+      "post": {
+        "summary": "获取机器人命令列表",
+        "description": "返回当前应用已注册的命令列表，可按 scope 过滤",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppGetBotCommands",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": { "type": "string" }
+                },
+                "required": ["appId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BotCommandList" } } } },
+          "401": { "description": "未授权" }
+        }
+      }
+    },
+    "/api/openapi/app/getBotCommandsByScope": {
+      "post": {
+        "summary": "按范围获取机器人命令",
+        "description": "根据 scopeType（及 chatId/userId）筛选命令列表",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppGetBotCommandsByScope",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": { "type": "string" },
+                  "scopeType": { "type": "string", "enum": ["default","all_private_chats","all_group_chats","chat","chat_member"] },
+                  "chatId": { "type": "string" },
+                  "userId": { "type": "string" }
+                },
+                "required": ["appId", "scopeType"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BotCommandListByScope" } } } },
+          "401": { "description": "未授权" }
+        }
+      }
+    },
+    "/api/openapi/app/getForIntegration": {
+      "post": {
+        "summary": "查询应用信息（集成场景）",
+        "description": "通过 appSecret 查询应用的基础信息（用于 SDK 初始化）",
+        "tags": ["openapi.app"],
+        "operationId": "openapiAppGetForIntegration",
+        "security": [ { "AppSecretHeader": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "appSecret": { "type": "string", "description": "应用密钥（必须为 appId:secret 组合）" } },
+                "required": ["appSecret"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OpenApp" } } } },
+          "401": { "description": "未授权" },
+          "404": { "description": "应用不存在" }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "inbox": {
+      "post": {
+        "summary": "消息收件箱回调（@机器人 或 DM 文本转发）",
+        "description": "当用户在群聊 @ 机器人，或用户在与开放平台机器人（openapiBot）的私聊中发送普通文本时，服务器会向机器人的回调地址发送该事件。X-TC-Payload-Type: inbox",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/InboxEvent" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "dm.start": {
+      "post": {
+        "summary": "私信 /start 深链事件",
+        "description": "当用户与机器人建立 DM 并触发 /start（或通过 deep link）时触发。X-TC-Payload-Type: dm.start。受限于服务端配置 botDmStart 与 botDmStartFromTyped。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DmStartEvent" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "buttonCallback": {
+      "post": {
+        "summary": "内联按钮回调事件",
+        "description": "当用户点击内联按钮（invoke/modal）且可路由到某个机器人（params.botId 指向目标机器人）时触发；command/url/deeplink 不会触发。X-TC-Payload-Type: buttonCallback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ButtonCallbackEvent" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AppSecretHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-App-Secret",
+        "description": "开放平台应用的密钥（appId:secret 组合；后端仅将冒号前部分用于查询，完整字符串用于严格校验）"
+      }
+    },
+    "schemas": {
+      "Message": {
+        "type": "object",
+        "description": "聊天消息对象",
+        "properties": {
+          "_id": { "type": "string", "description": "消息ID" },
+          "converseId": { "type": "string", "description": "会话ID" },
+          "groupId": { "type": "string", "description": "群组ID（可为空）" },
+          "author": { "type": "string", "description": "作者用户ID" },
+          "content": { "type": "string", "description": "消息内容（BBCode/纯文本）" },
+          "meta": { "$ref": "#/components/schemas/MessageMeta" },
+          "hasRecall": { "type": "boolean", "description": "是否被撤回" },
+          "createdAt": { "type": "string", "description": "创建时间（ISO 字符串）" },
+          "updatedAt": { "type": "string", "description": "更新时间（ISO 字符串）" }
+        }
+      },
+      "Success": {
+        "type": "object",
+        "description": "通用成功结构",
+        "properties": {
+          "success": { "type": "boolean", "example": true, "description": "是否成功" }
+        }
+      },
+      "BotCommandList": {
+        "type": "object",
+        "properties": {
+          "appId": { "type": "string", "description": "应用ID" },
+          "appName": { "type": "string", "description": "应用名称" },
+          "commands": { "type": "array", "items": { "$ref": "#/components/schemas/BotCommand" }, "description": "命令列表" }
+        }
+      },
+      "BotCommandListByScope": {
+        "type": "object",
+        "properties": {
+          "appId": { "type": "string", "description": "应用ID" },
+          "appName": { "type": "string", "description": "应用名称" },
+          "scopeType": { "type": "string", "description": "范围类型" },
+          "commands": { "type": "array", "items": { "$ref": "#/components/schemas/BotCommand" }, "description": "命令列表" }
+        }
+      },
+      "InlineActionItem": {
+        "type": "object",
+        "description": "内联按钮条目（支持多种颜色样式）",
+        "properties": {
+          "id": { "type": "string", "description": "按钮唯一ID" },
+          "type": { "type": "string", "enum": ["command","url","invoke","modal","deeplink"], "description": "按钮类型" },
+          "label": { "type": "string", "description": "按钮显示文本" },
+          "params": { "type": "object", "description": "按钮附加参数（透传回调）" },
+          "priority": { "type": "string", "enum": ["primary","secondary","danger","success"], "description": "按钮颜色/优先级：primary=蓝色、secondary=默认/灰色、danger=红色、success=绿色" }
+        },
+        "required": ["id","type"]
+      },
+      "InlineKeyboardRow": {
+        "type": "object",
+        "properties": {
+          "actions": { "type": "array", "items": { "type": "string" }, "description": "该行按钮的ID列表" },
+          "label": { "type": "string", "description": "该行可选标签" }
+        }
+      },
+      "InlineActionRange": {
+        "type": "object",
+        "properties": {
+          "offset": { "type": "number" },
+          "length": { "type": "number" },
+          "style": { "type": "string" },
+          "actionId": { "type": "string" }
+        }
+      },
+      "InlineActions": {
+        "type": "object",
+        "properties": {
+          "actions": { "type": "array", "items": { "$ref": "#/components/schemas/InlineActionItem" }, "description": "按钮列表" },
+          "keyboard": { "type": "array", "items": { "$ref": "#/components/schemas/InlineKeyboardRow" }, "description": "键盘布局（行）" },
+          "ranges": { "type": "array", "items": { "$ref": "#/components/schemas/InlineActionRange" }, "description": "文本内应用按钮的范围" },
+          "signature": { "type": "string", "description": "签名（可选）" },
+          "scopes": { "type": "array", "items": { "type": "string" }, "description": "适用范围（可选）" },
+          "analytics": { "type": "object", "properties": { "traceId": { "type": "string", "description": "追踪ID" } }, "description": "分析与追踪数据（可选）" }
+        }
+      },
+      "MessageMeta": {
+        "type": "object",
+        "properties": {
+          "inlineActions": { "$ref": "#/components/schemas/InlineActions", "description": "内联操作（按钮/键盘等）" },
+          "replyKeyboard": { "$ref": "#/components/schemas/ReplyKeyboardMeta", "description": "Reply Keyboard（输入框上方的快捷按钮）。客户端按最新携带的 meta.replyKeyboard 渲染/替换/移除。" }
+        }
+      },
+      "CommandScope": {
+        "type": "object",
+        "description": "命令可见范围定义",
+        "properties": {
+          "type": { "type": "string", "enum": ["default","all_private_chats","all_group_chats","chat","chat_member"], "description": "范围类型" },
+          "chat_id": { "type": "string", "description": "当 type 为 chat/chat_member 时必填" },
+          "user_id": { "type": "string", "description": "当 type 为 chat_member 时必填" }
+        },
+        "required": ["type"]
+      },
+      "BotCommand": {
+        "type": "object",
+        "description": "机器人命令",
+        "properties": {
+          "command": { "type": "string", "maxLength": 32, "pattern": "^[a-z0-9_]+$", "description": "命令名（小写字母/数字/下划线）" },
+          "description": { "type": "string", "maxLength": 256, "description": "命令描述" },
+          "scope": { "$ref": "#/components/schemas/CommandScope" }
+        },
+        "required": ["command", "description"]
+      },
+      "BotIdentity": {
+        "type": "object",
+        "description": "机器人身份信息",
+        "properties": {
+          "_id": { "type": "string", "description": "机器人用户ID" },
+          "nickname": { "type": "string", "description": "显示昵称" },
+          "email": { "type": "string", "description": "邮箱（机器人注册邮箱）" },
+          "avatar": { "type": "string", "description": "头像URL" }
+        }
+      },
+      "ReplyKeyboardButton": {
+        "type": "object",
+        "properties": { "text": { "type": "string", "description": "按钮文本" } },
+        "required": ["text"]
+      },
+      "ReplyKeyboardSelective": {
+        "type": "object",
+        "properties": {
+          "visibleForUserIds": { "type": "array", "items": { "type": "string" }, "description": "仅对这些用户显示（群聊场景可选）" }
+        }
+      },
+      "ReplyKeyboardMeta": {
+        "type": "object",
+        "description": "Reply Keyboard 元数据（消息级）。最新一条携带的 meta.replyKeyboard 控制输入框上方的快捷菜单。",
+        "properties": {
+          "keyboard": {
+            "type": "array",
+            "description": "二维数组，每个内层数组是一行按钮",
+            "items": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReplyKeyboardButton" }
+            }
+          },
+          "resize": { "type": "boolean", "description": "是否自适应高度（可选）" },
+          "one_time": { "type": "boolean", "description": "是否一次性：点击任意按钮后隐藏（客户端本地行为）" },
+          "remove": { "type": "boolean", "description": "是否移除键盘（true 则忽略其他字段）" },
+          "placeholder": { "type": "string", "description": "覆盖输入框占位符（可选）" },
+          "selective": { "$ref": "#/components/schemas/ReplyKeyboardSelective" },
+          "trigger": { "type": "string", "enum": ["auto","button"], "description": "展开触发策略：auto=消息到达立即展开（默认）、button=仅显示切换按钮，点击后展开" },
+          "toggleLabel": { "type": "string", "description": "切换按钮的文本/tooltip（可选，建议传 i18n key）" },
+          "toggleIcon": { "type": "string", "description": "切换按钮图标名（可选，如 mdi:keyboard-outline）" }
+        }
+      },
+      "InboxEvent": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "description": "目标机器人用户ID（openapiBot）" },
+          "type": { "type": "string", "enum": ["message"], "description": "固定为 message" },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "groupId": { "type": "string", "nullable": true, "description": "群组ID（DM 时为 null/省略）" },
+              "converseId": { "type": "string", "description": "会话ID" },
+              "messageId": { "type": "string", "description": "消息ID" },
+              "messageAuthor": { "type": "string", "description": "消息作者用户ID" },
+              "messageSnippet": { "type": "string", "description": "消息摘要（加密消息为 \"加密消息\"）" },
+              "messagePlainContent": { "type": "string", "nullable": true, "description": "纯文本（加密消息为空）" }
+            },
+            "required": ["converseId", "messageId", "messageAuthor", "messageSnippet"]
+          }
+        }
+      },
+      "DmStartEvent": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["dm.start"], "description": "固定为 dm.start" },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "botUserId": { "type": "string", "description": "机器人用户ID" },
+              "fromUserId": { "type": "string", "description": "触发 /start 的用户ID" },
+              "converseId": { "type": "string", "description": "DM 会话ID" },
+              "params": { "type": "object", "description": "深链参数（可选，通常形如 { text: 'rk_show' } 或字符串）" },
+              "timestamp": { "type": "number", "description": "事件时间戳" }
+            },
+            "required": ["botUserId", "fromUserId", "converseId"]
+          }
+        }
+      },
+      "ButtonCallbackEvent": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["buttonCallback"] },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "messageAuthor": { "type": "string", "description": "点击用户ID" },
+              "converseId": { "type": "string" },
+              "groupId": { "type": "string", "nullable": true },
+              "originalMessageId": { "type": "string", "description": "原消息ID" },
+              "actionId": { "type": "string", "description": "按钮ID" },
+              "type": { "type": "string", "description": "按钮类型（invoke/modal）" },
+              "params": { "type": "object", "description": "按钮参数（透传）" },
+              "traceId": { "type": "string", "description": "回调追踪ID" },
+              "ts": { "type": "number", "description": "时间戳" }
+            },
+            "required": ["messageAuthor", "converseId", "originalMessageId", "actionId"]
+          }
+        }
+      },
+      "BotCommandMeta": {
+        "type": "object",
+        "description": "命令元信息（用于缓存协商）",
+        "properties": {
+          "appId": { "type": "string" },
+          "version": { "type": "number" },
+          "etag": { "type": "string", "nullable": true },
+          "updatedAt": { "type": "string", "nullable": true }
+        }
+      },
+      "BotCommandsForBotUser": {
+        "type": "object",
+        "description": "某个机器人用户在当前会话中的命令集合（或未变更提示）",
+        "properties": {
+          "appId": { "type": "string" },
+          "appName": { "type": "string" },
+          "appIcon": { "type": "string" },
+          "userId": { "type": "string", "description": "机器人用户ID" },
+          "commands": { "type": "array", "items": { "$ref": "#/components/schemas/BotCommand" } },
+          "version": { "type": "number" },
+          "etag": { "type": "string", "nullable": true },
+          "notModified": { "type": "boolean", "description": "若为 true，表示客户端 If-Version/If-Etag 命中，无需下发 commands" }
+        }
+      }
+    }
+  }
+}

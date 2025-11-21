@@ -8,6 +8,12 @@ export * from './reg';
 export * from './context';
 export { useGroupPanelParams } from '@/routes/Main/Content/Group/utils';
 
+// Inline Actions skeleton (M1)
+export * from './inline-actions';
+
+// Slash Commands system
+export * from './slash-commands';
+
 /**
  * @deprecated 从component引用
  */
@@ -37,6 +43,7 @@ export {
 export { getServiceWorkerRegistration } from '@/utils/sw-helper';
 export { postMessageEvent } from '@/utils/event-helper';
 export { panelWindowManager } from '@/utils/window-helper';
+export { emitGlobalSocketEvent } from '@/utils/global-state-helper';
 import {
   /**
    * 注意: Tailchat 内部的request不会被导出为插件可用模块，如果需要网络请求的话请自行import axios(以作为复用依赖)
@@ -104,6 +111,7 @@ export function useCurrentUserInfo() {
 
   return _pick(userInfo, [
     '_id',
+    'username',
     'email',
     'nickname',
     'discriminator',
@@ -163,3 +171,10 @@ export function createPluginRequest(pluginName: string) {
 export function postRequest(url: string, data?: any, config?: RequestConfig) {
   return request.post(`/api${url}`, data, purgeRequestConfig(config));
 }
+
+// ------------------------------------------------------------
+// 内置扩展：消息内斜杠命令点击解析器（M1）
+// 说明：识别消息中的 /命令 片段，渲染为可点击元素；点击后通过 applyChatInput 进行填充或发送。
+// 注意：此处仅包含最小可用逻辑，后续可在主题或配置层进行样式/行为增强。
+// ------------------------------------------------------------
+// 斜杠命令点击解析器移至 web 专属侧效文件（见 plugin/extra/slash-command.tsx）

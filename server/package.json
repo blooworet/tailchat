@@ -25,9 +25,11 @@
     "plugin:install": "node ./scripts/installPlugin.js",
     "protobuf": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=proto/ proto/*.proto",
     "gen:swagger:old": "ts-node ./scripts/swagger.ts",
-    "gen:openapi": "tailchat-service-openapi-generator"
+    "gen:openapi": "tailchat-service-openapi-generator",
+    "migrate:bottoken": "npm run migrate:up && echo 'bottoken migration executed'"
   },
   "dependencies": {
+    "@kafkajs/confluent-schema-registry": "^3.3.0",
     "@socket.io/admin-ui": "^0.5.1",
     "@socket.io/redis-adapter": "^8.2.1",
     "@typegoose/typegoose": "9.3.1",
@@ -48,8 +50,11 @@
     "i18next": "^20.3.5",
     "ioredis": "^4.27.6",
     "jsonwebtoken": "^8.5.1",
+    "kafkajs": "^2.2.4",
     "lodash": "^4.17.21",
+    "lru-cache": "^10.0.0",
     "mime": "^2.5.2",
+    "minio": "^7.0.9",
     "mkdirp": "^1.0.4",
     "moment": "^2.29.1",
     "mongodb": "4.2.1",
@@ -68,7 +73,7 @@
     "socket.io-msgpack-parser": "^3.0.2",
     "tailchat-server-sdk": "workspace:*",
     "ts-node": "^10.0.0",
-    "typescript": "^4.3.3",
+    "typescript": "^5.3.3",
     "url-regex": "^5.0.0"
   },
   "devDependencies": {
@@ -78,7 +83,7 @@
     "@types/crc": "^3.4.0",
     "@types/ejs": "^3.1.0",
     "@types/fs-extra": "^9.0.13",
-    "@types/i18next-fs-backend": "^1.0.1",
+    "@types/i18next-fs-backend": "^1.2.0",
     "@types/inquirer": "^8.2.1",
     "@types/ioredis": "^4.26.4",
     "@types/jest": "^26.0.23",

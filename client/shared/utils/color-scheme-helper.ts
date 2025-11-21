@@ -8,34 +8,20 @@ export function parseColorScheme(colorScheme: string): {
   extraSchemeName: string | null;
 } {
   if (colorScheme === 'dark') {
-    return {
-      isDarkMode: true,
-      extraSchemeName: null,
-    };
-  } else if (colorScheme === 'light') {
-    return {
-      isDarkMode: false,
-      extraSchemeName: null,
-    };
-  } else if (colorScheme === 'auto') {
-    return {
-      isDarkMode: window.matchMedia
-        ? window.matchMedia('(prefers-color-scheme: dark)').matches
-        : true,
-      extraSchemeName: null,
-    };
-  } else {
-    // 可能是插件 for example: dark+miku
-    let [base, name] = colorScheme.split('+');
-
-    if (!isValidStr(name)) {
-      name = base;
-      base = 'dark';
-    }
-
-    return {
-      isDarkMode: base === 'dark',
-      extraSchemeName: `theme-${name}`,
-    };
+    return { isDarkMode: true, extraSchemeName: null };
   }
+
+  if (colorScheme === 'light') {
+    return { isDarkMode: false, extraSchemeName: null };
+  }
+
+  if (colorScheme === 'auto') {
+    const isDark = window.matchMedia
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : true;
+    return { isDarkMode: isDark, extraSchemeName: null };
+  }
+
+  // fallback for any unknown value
+  return { isDarkMode: true, extraSchemeName: null };
 }

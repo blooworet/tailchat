@@ -45,16 +45,27 @@ try {
   sharedEvent.on('loginSuccess', (userInfo) => {
     posthog.identify(userInfo._id, {
       email: userInfo.email,
-      username: `${userInfo.nickname}#${userInfo.discriminator}`,
+      username: userInfo.username ? `@${userInfo.username}` : userInfo.nickname,
       avatar: userInfo.avatar,
       temporary: userInfo.temporary,
     });
   });
 
   sharedEvent.on('appLoaded', () => {
-    // 上报加载耗时
+    // 上报加载耗时，使用安全的时间获取方式
+    const getPerformanceTime = () => {
+      try {
+        // 动态导入以避免模块加载时的错误
+        const { safePerformanceNow } = require('@/utils/performance-safe');
+        return safePerformanceNow();
+      } catch (error) {
+        console.warn('Failed to get safe performance time:', error);
+        return Date.now();
+      }
+    };
+
     posthog.capture('App Loaded', {
-      usage: performance.now(),
+      usage: getPerformanceTime(),
     });
   });
 } catch (err) {

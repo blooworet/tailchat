@@ -23,7 +23,6 @@
     "express-mongoose-ra-json-server": "^0.1.0",
     "filesize": "^8.0.7",
     "jsonwebtoken": "^8.5.1",
-    "lodash": "^4.17.21",
     "md5": "^2.3.0",
     "morgan": "^1.10.0",
     "react": "^18.2.0",
@@ -35,8 +34,10 @@
   "devDependencies": {
     "@types/compression": "^1.7.2",
     "@types/express": "^4.17.15",
+    "@types/i18next-fs-backend": "^1.0.1",
     "@types/loadable__component": "^5.13.4",
     "@types/md5": "^2.3.2",
+    "@types/minio": "^7.0.9",
     "@types/morgan": "^1.9.4",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",

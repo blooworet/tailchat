@@ -1,0 +1,32 @@
+{
+  "name": "tailchat-telegram-forwarder",
+  "version": "1.0.0",
+  "description": "Tailchat 到 Telegram 消息转发机器人",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "setup": "node setup.js",
+    "create-env": "node create-env.js"
+  },
+  "keywords": [
+    "tailchat",
+    "telegram",
+    "bot",
+    "forwarder"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.4.7",
+    "koa": "^2.15.4",
+    "koa-bodyparser": "^4.4.1",
+    "koa-router": "^13.0.1",
+    "tailchat-client-sdk": "file:./tailchat-client-sdk"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
+

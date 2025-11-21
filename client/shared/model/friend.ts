@@ -1,4 +1,4 @@
-import { request } from '../api/request';
+import { getGlobalSocket } from '../api/socket';
 
 export interface FriendRequest {
   _id: string;
@@ -14,11 +14,11 @@ export interface FriendRequest {
 export async function addFriendRequest(
   targetId: string
 ): Promise<FriendRequest> {
-  const { data } = await request.post('/api/friend/request/add', {
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<FriendRequest>('friend.request.add', {
     to: targetId,
   });
-
-  return data;
 }
 
 /**
@@ -26,9 +26,9 @@ export async function addFriendRequest(
  * @param requestId 好友请求ID
  */
 export async function acceptFriendRequest(requestId: string): Promise<void> {
-  await request.post('/api/friend/request/accept', {
-    requestId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('friend.request.accept', { requestId });
 }
 
 /**
@@ -36,9 +36,9 @@ export async function acceptFriendRequest(requestId: string): Promise<void> {
  * @param requestId 好友请求ID
  */
 export async function denyFriendRequest(requestId: string): Promise<void> {
-  await request.post('/api/friend/request/deny', {
-    requestId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('friend.request.deny', { requestId });
 }
 
 /**
@@ -46,18 +46,18 @@ export async function denyFriendRequest(requestId: string): Promise<void> {
  * @param requestId 好友请求ID
  */
 export async function cancelFriendRequest(requestId: string): Promise<void> {
-  await request.post('/api/friend/request/cancel', {
-    requestId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('friend.request.cancel', { requestId });
 }
 
 /**
  * 移除好友(单项)
  */
 export async function removeFriend(friendUserId: string): Promise<void> {
-  await request.post('/api/friend/removeFriend', {
-    friendUserId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('friend.removeFriend', { friendUserId });
 }
 
 /**
@@ -67,8 +67,7 @@ export async function setFriendNickname(
   targetId: string,
   nickname: string
 ): Promise<void> {
-  await request.post('/api/friend/setFriendNickname', {
-    targetId,
-    nickname,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('friend.setFriendNickname', { targetId, nickname });
 }

@@ -210,6 +210,11 @@ export const [pluginMessageExtraParsers, regMessageExtraParser] = buildRegList<{
   render: (payload: ChatMessage) => React.ReactNode;
 }>();
 
+// 内置：斜杠命令点击解析器（占位注册，后续可拆分为独立文件）
+// 行为：识别 payload.content 的纯文本中的以 / 开头的命令片段；
+// 渲染点击元素，点击后通过 applyChatInput 事件进行填充/发送。
+// 注意：具体解析与渲染细节在实现时遵循 M1 文档规则，这里不包含代码。
+
 /**
  * 注册根路由
  */

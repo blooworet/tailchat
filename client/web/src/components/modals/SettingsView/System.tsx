@@ -1,7 +1,7 @@
 import { FullModalFactory } from '@/components/FullModal/Factory';
 import { FullModalField } from '@/components/FullModal/Field';
 import { LanguageSelect } from '@/components/LanguageSelect';
-import { pluginColorScheme, pluginSettings } from '@/plugin/common';
+import { pluginSettings } from '@/plugin/common';
 import { Select, Switch, Button } from 'antd';
 import React from 'react';
 import {
@@ -12,14 +12,21 @@ import {
 } from 'tailchat-shared';
 import _get from 'lodash/get';
 
-export const SettingsSystem: React.FC = React.memo(() => {
+export const SettingsSystem = React.memo(() => {
   const { colorScheme, setColorScheme } = useColorScheme();
   const { settings, setSettings, loading } = useUserSettings();
   const { isAlphaMode, setAlphaMode } = useAlphaMode();
 
+  const colorSchemeOptions: Array<{ value: string; label: string }> = [
+    { value: 'dark', label: t('暗色') },
+    { value: 'light', label: t('亮色') },
+    { value: 'auto', label: t('自动') },
+  ];
+
   return (
     <div>
       <FullModalField title={t('系统语言')} content={<LanguageSelect />} />
+
 
       <FullModalField
         title={t('配色方案')}
@@ -30,12 +37,9 @@ export const SettingsSystem: React.FC = React.memo(() => {
             value={colorScheme}
             onChange={setColorScheme}
           >
-            <Select.Option value="dark">{t('暗黑模式')}</Select.Option>
-            <Select.Option value="light">{t('亮色模式')}</Select.Option>
-            <Select.Option value="auto">{t('自动')}</Select.Option>
-            {pluginColorScheme.map((pcs, i) => (
-              <Select.Option key={pcs.name + i} value={pcs.name}>
-                {pcs.label}
+            {colorSchemeOptions.map((opt) => (
+              <Select.Option key={opt.value} value={opt.value}>
+                {opt.label}
               </Select.Option>
             ))}
           </Select>

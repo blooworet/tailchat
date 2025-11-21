@@ -3,7 +3,9 @@
   "compilerOptions": {
     "declaration": true,
     "outDir": "./dist",
-    "paths": {}
+    "verbatimModuleSyntax": false,
+    "paths": {},
+    "types": []
   },
   "include": ["./src/**/*"],
   "exclude": ["./node_modules/**/*", "./dist/**/*"]

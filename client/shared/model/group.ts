@@ -1,6 +1,6 @@
-import { request } from '../api/request';
-import {
-  GroupPanelType,
+import { getGlobalSocket } from '../api/socket';
+import { GroupPanelType } from 'tailchat-types';
+import type {
   GroupPanel,
   GroupRole,
   GroupInfo as IGroupInfo,
@@ -74,12 +74,9 @@ export async function createGroup(
   name: string,
   panels: GroupPanel[]
 ): Promise<GroupInfo> {
-  const { data } = await request.post('/api/group/createGroup', {
-    name,
-    panels,
-  });
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<GroupInfo>('group.createGroup', { name, panels });
 }
 
 /**
@@ -88,13 +85,9 @@ export async function createGroup(
 export async function getGroupBasicInfo(
   groupId: string
 ): Promise<GroupBasicInfo | null> {
-  const { data } = await request.get('/api/group/getGroupBasicInfo', {
-    params: {
-      groupId,
-    },
-  });
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<GroupBasicInfo | null>('group.getGroupBasicInfo', { groupId });
 }
 
 /**
@@ -115,11 +108,9 @@ export async function modifyGroupField(
   fieldName: AllowedModifyField,
   fieldValue: unknown
 ) {
-  await request.post('/api/group/updateGroupField', {
-    groupId,
-    fieldName,
-    fieldValue,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.updateGroupField', { groupId, fieldName, fieldValue });
 }
 
 /**
@@ -133,11 +124,9 @@ export async function modifyGroupConfig(
   configName: GroupConfigNames,
   configValue: unknown
 ) {
-  await request.post('/api/group/updateGroupConfig', {
-    groupId,
-    configName,
-    configValue,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.updateGroupConfig', { groupId, configName, configValue });
 }
 
 /**
@@ -146,9 +135,10 @@ export async function modifyGroupConfig(
  * @param groupId 群组ID
  */
 export async function quitGroup(groupId: string) {
-  await request.post('/api/group/quitGroup', {
-    groupId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  try { await (socket as any).waitReady?.(); } catch {}
+  await socket.request('group.quitGroup', { groupId });
 }
 
 /**
@@ -156,11 +146,9 @@ export async function quitGroup(groupId: string) {
  * @param groupId 群组ID
  */
 export async function isMember(groupId: string): Promise<boolean> {
-  const { data } = await request.post('/api/group/isMember', {
-    groupId,
-  });
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<boolean>('group.isMember', { groupId });
 }
 
 /**
@@ -174,11 +162,9 @@ export async function appendGroupMemberRoles(
   memberIds: string[],
   roles: string[]
 ) {
-  await request.post('/api/group/appendGroupMemberRoles', {
-    groupId,
-    memberIds,
-    roles,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.appendGroupMemberRoles', { groupId, memberIds, roles });
 }
 
 /**
@@ -192,11 +178,9 @@ export async function removeGroupMemberRoles(
   memberIds: string[],
   roles: string[]
 ) {
-  await request.post('/api/group/removeGroupMemberRoles', {
-    groupId,
-    memberIds,
-    roles,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.removeGroupMemberRoles', { groupId, memberIds, roles });
 }
 
 /**
@@ -208,12 +192,9 @@ export async function createGroupInviteCode(
   groupId: string,
   inviteType: 'normal' | 'permanent'
 ): Promise<GroupInvite> {
-  const { data } = await request.post('/api/group/invite/createGroupInvite', {
-    groupId,
-    inviteType,
-  });
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<GroupInvite>('group.invite.createGroupInvite', { groupId, inviteType });
 }
 
 /**
@@ -229,12 +210,9 @@ export async function editGroupInvite(
   expiredAt?: number,
   usageLimit?: number
 ) {
-  await request.post('/api/group/invite/editGroupInvite', {
-    groupId,
-    code,
-    expiredAt,
-    usageLimit,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.invite.editGroupInvite', { groupId, code, expiredAt, usageLimit });
 }
 
 /**
@@ -244,16 +222,9 @@ export async function editGroupInvite(
 export async function getAllGroupInviteCode(
   groupId: string
 ): Promise<GroupInvite[]> {
-  const { data } = await request.get(
-    '/api/group/invite/getAllGroupInviteCode',
-    {
-      params: {
-        groupId,
-      },
-    }
-  );
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<GroupInvite[]>('group.invite.getAllGroupInviteCode', { groupId });
 }
 
 /**
@@ -263,13 +234,9 @@ export async function getAllGroupInviteCode(
 export async function findGroupInviteByCode(
   inviteCode: string
 ): Promise<GroupInvite | null> {
-  const { data } = await request.get('/api/group/invite/findInviteByCode', {
-    params: {
-      code: inviteCode,
-    },
-  });
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<GroupInvite | null>('group.invite.findInviteByCode', { code: inviteCode });
 }
 
 /**
@@ -277,9 +244,9 @@ export async function findGroupInviteByCode(
  * 即通过群组邀请加入群组
  */
 export async function applyGroupInvite(inviteCode: string): Promise<void> {
-  await request.post('/api/group/invite/applyInvite', {
-    code: inviteCode,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.invite.applyInvite', { code: inviteCode });
 }
 
 /**
@@ -289,10 +256,9 @@ export async function deleteGroupInvite(
   groupId: string,
   inviteId: string
 ): Promise<void> {
-  await request.post('/api/group/invite/deleteInvite', {
-    groupId,
-    inviteId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.invite.deleteInvite', { groupId, inviteId });
 }
 
 /**
@@ -309,10 +275,9 @@ export async function createGroupPanel(
     meta?: Record<string, unknown>;
   }
 ) {
-  await request.post('/api/group/createGroupPanel', {
-    ...options,
-    groupId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.createGroupPanel', { groupId, ...options });
 }
 
 /**
@@ -330,11 +295,9 @@ export async function modifyGroupPanel(
     meta?: Record<string, unknown>;
   }
 ) {
-  await request.post('/api/group/modifyGroupPanel', {
-    ...options,
-    groupId,
-    panelId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.modifyGroupPanel', { groupId, panelId, ...options });
 }
 
 /**
@@ -343,10 +306,9 @@ export async function modifyGroupPanel(
  * @param panelId 面板Id
  */
 export async function deleteGroupPanel(groupId: string, panelId: string) {
-  await request.post('/api/group/deleteGroupPanel', {
-    groupId,
-    panelId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.deleteGroupPanel', { groupId, panelId });
 }
 
 /**
@@ -360,11 +322,9 @@ export async function createGroupRole(
   roleName: string,
   permissions: string[]
 ) {
-  await request.post('/api/group/createGroupRole', {
-    groupId,
-    roleName,
-    permissions,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.createGroupRole', { groupId, roleName, permissions });
 }
 
 /**
@@ -373,10 +333,9 @@ export async function createGroupRole(
  * @param roleId 身份组Id
  */
 export async function deleteGroupRole(groupId: string, roleId: string) {
-  await request.post('/api/group/deleteGroupRole', {
-    groupId,
-    roleId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.deleteGroupRole', { groupId, roleId });
 }
 
 /**
@@ -390,11 +349,9 @@ export async function updateGroupRoleName(
   roleId: string,
   roleName: string
 ) {
-  await request.post('/api/group/updateGroupRoleName', {
-    groupId,
-    roleId,
-    roleName,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.updateGroupRoleName', { groupId, roleId, roleName });
 }
 
 /**
@@ -408,11 +365,9 @@ export async function updateGroupRolePermission(
   roleId: string,
   permissions: string[]
 ) {
-  await request.post('/api/group/updateGroupRolePermission', {
-    groupId,
-    roleId,
-    permissions,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.updateGroupRolePermission', { groupId, roleId, permissions });
 }
 
 /**
@@ -426,11 +381,9 @@ export async function muteGroupMember(
   memberId: string,
   muteMs: number
 ) {
-  await request.post('/api/group/muteGroupMember', {
-    groupId,
-    memberId,
-    muteMs,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.muteGroupMember', { groupId, memberId, muteMs });
 }
 
 /**
@@ -439,10 +392,9 @@ export async function muteGroupMember(
  * @param memberId 成员ID
  */
 export async function deleteGroupMember(groupId: string, memberId: string) {
-  await request.post('/api/group/deleteGroupMember', {
-    groupId,
-    memberId,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.deleteGroupMember', { groupId, memberId });
 }
 
 /**
@@ -453,13 +405,10 @@ export async function getGroupPanelExtraData(
   panelId: string,
   name: string
 ): Promise<string | null> {
-  const { data } = await request.post('/api/group/extra/getPanelData', {
-    groupId,
-    panelId,
-    name,
-  });
-
-  return data.data ?? null;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  const res = await socket.request<{ data: string | null }>('group.extra.getPanelData', { groupId, panelId, name });
+  return res?.data ?? null;
 }
 
 /**
@@ -471,7 +420,9 @@ export async function saveGroupPanelExtraData(
   name: string,
   data: any
 ): Promise<void> {
-  await request.post('/api/group/extra/savePanelData', {
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('group.extra.savePanelData', {
     groupId,
     panelId,
     name,

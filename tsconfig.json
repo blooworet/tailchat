@@ -5,7 +5,7 @@
     "strict": true,
     "pretty": true,
     "skipLibCheck": true,
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": true,
     "experimentalDecorators": true,
   }
 }

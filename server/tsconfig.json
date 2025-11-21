@@ -5,7 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": false,
     "jsx": "react",
     "strict": false, // 临时
     "typeRoots": ["./node_modules/@types", "./types"],

@@ -5,6 +5,7 @@ import { Group } from './Group';
 import { Inbox } from './Inbox';
 import { pluginCustomPanel } from '@/plugin/common';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import InviteInsideMain from './Invite';
 
 export const MainContent: React.FC = React.memo(() => {
   return (
@@ -12,6 +13,7 @@ export const MainContent: React.FC = React.memo(() => {
       <Route path="/personal/*" element={<Personal />} />
       <Route path="/inbox/*" element={<Inbox />} />
       <Route path="/group/:groupId/*" element={<Group />} />
+      <Route path="/invite/:inviteCode" element={<InviteInsideMain />} />
 
       {pluginCustomPanel
         .filter((p) =>

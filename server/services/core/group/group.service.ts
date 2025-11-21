@@ -478,6 +478,18 @@ class GroupService extends TcService {
     const { groupId, configName, configValue } = ctx.params;
     const userId = ctx.meta.userId;
     const t = ctx.meta.t;
+    // Scope: 机器人变更群配置需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
 
     const [hasPermission] = await call(ctx).checkUserPermissions(
       groupId,
@@ -533,20 +545,35 @@ class GroupService extends TcService {
     }>
   ) {
     const { groupId, userId } = ctx.params;
+    // Scope: 机器人管理成员需要 'group.manage'（仅在存在 token 时解析）
+    const decoded: any =
+      typeof ctx.meta.token === 'string'
+        ? await ctx.call('user.extractTokenMeta', { token: ctx.meta.token })
+        : null;
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(ctx.meta.t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(ctx.meta.t('Bot scope denied: group.manage'));
+      }
+    }
 
     if (!isValidStr(userId)) {
-      throw new EntityError('用户id为空');
+      throw new EntityError(ctx.meta.t('用户id为空'));
     }
 
     if (!isValidStr(groupId)) {
-      throw new EntityError('群组id为空');
+      throw new EntityError(ctx.meta.t('群组id为空'));
     }
 
     const { members } = await this.adapter.model.findById(groupId, {
       members: 1,
     });
     if (members.findIndex((m) => String(m.userId) === userId) >= 0) {
-      throw new Error('已加入该群组');
+      throw new Error(ctx.meta.t('已加入该群组'));
     }
 
     const doc = await this.adapter.model
@@ -645,9 +672,9 @@ class GroupService extends TcService {
   /**
    * 检查是否为群组成员
    */
-  async isMember(ctx: TcContext<{ groupId: string }>) {
+  async isMember(ctx: TcContext<{ groupId: string; userId?: string }>) {
     const groupId = ctx.params.groupId;
-    const userId = ctx.meta.userId;
+    const userId = ctx.params.userId || ctx.meta.userId; // 支持检查指定用户，默认检查当前用户
 
     const groupInfo = await call(ctx).getGroupInfo(groupId);
     if (!groupInfo) {
@@ -671,6 +698,21 @@ class GroupService extends TcService {
     }>
   ) {
     const { groupId, memberIds, roles } = ctx.params;
+    // Scope: 机器人管理角色需要 'group.manage'（仅在存在 token 时解析）
+    const decoded: any =
+      typeof ctx.meta.token === 'string'
+        ? await ctx.call('user.extractTokenMeta', { token: ctx.meta.token })
+        : null;
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError('Bot scope denied: group.manage');
+        }
+      } catch (e) {
+        throw new NoPermissionError('Bot scope denied: group.manage');
+      }
+    }
 
     await this.adapter.model.checkGroupFieldPermission(ctx, groupId, 'roles');
 
@@ -713,6 +755,18 @@ class GroupService extends TcService {
     }>
   ) {
     const { groupId, memberIds, roles } = ctx.params;
+    // Scope: 机器人管理角色需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError('Bot scope denied: group.manage');
+        }
+      } catch (e) {
+        throw new NoPermissionError('Bot scope denied: group.manage');
+      }
+    }
 
     await this.adapter.model.checkGroupFieldPermission(ctx, groupId, 'roles');
 
@@ -761,6 +815,19 @@ class GroupService extends TcService {
     const { groupId, name, type, parentId, provider, pluginPanelName, meta } =
       ctx.params;
     const { t, userId } = ctx.meta;
+
+    // Scope: 机器人管理群面板需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
 
     const [hasPermission] = await call(ctx).checkUserPermissions(
       groupId,
@@ -844,6 +911,19 @@ class GroupService extends TcService {
     } = ctx.params;
     const { t, userId } = ctx.meta;
 
+    // Scope: 机器人管理群面板需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
+
     const [hasPermission] = await call(ctx).checkUserPermissions(
       groupId,
       userId,
@@ -892,6 +972,19 @@ class GroupService extends TcService {
   async deleteGroupPanel(ctx: TcContext<{ groupId: string; panelId: string }>) {
     const { groupId, panelId } = ctx.params;
     const { t, userId } = ctx.meta;
+
+    // Scope: 机器人管理群面板需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
 
     const [hasPermission] = await call(ctx).checkUserPermissions(
       groupId,
@@ -963,6 +1056,19 @@ class GroupService extends TcService {
     const { groupId, roleName, permissions } = ctx.params;
     const { userId, t } = ctx.meta;
 
+    // Scope: 机器人管理群角色需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
+
     const [hasPermission] = await call(ctx).checkUserPermissions(
       groupId,
       userId,
@@ -1002,6 +1108,19 @@ class GroupService extends TcService {
   async deleteGroupRole(ctx: TcContext<{ groupId: string; roleId: string }>) {
     const { groupId, roleId } = ctx.params;
     const { userId, t } = ctx.meta;
+
+    // Scope: 机器人管理群角色需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
 
     const [hasPermission] = await call(ctx).checkUserPermissions(
       groupId,
@@ -1049,6 +1168,19 @@ class GroupService extends TcService {
     const { groupId, roleId, roleName } = ctx.params;
     const { userId, t } = ctx.meta;
 
+    // Scope: 机器人管理群角色需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
+
     const [hasPermission] = await call(ctx).checkUserPermissions(
       groupId,
       userId,
@@ -1081,6 +1213,19 @@ class GroupService extends TcService {
   ) {
     const { groupId, roleId, permissions } = ctx.params;
     const { userId, t } = ctx.meta;
+
+    // Scope: 机器人管理群角色需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
 
     const [hasPermission] = await call(ctx).checkUserPermissions(
       groupId,
@@ -1191,6 +1336,19 @@ class GroupService extends TcService {
     const { groupId, memberId } = ctx.params;
     const userId = ctx.meta.userId;
     const t = ctx.meta.t;
+
+    // Scope: 机器人管理成员需要 'group.manage'
+    const decoded: any = await ctx.call('user.extractTokenMeta', { token: ctx.meta.token });
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.manage')) {
+          throw new NoPermissionError(t('Bot scope denied: group.manage'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.manage'));
+      }
+    }
 
     // 检查是否在踢自己
     if (String(memberId) === String(userId)) {

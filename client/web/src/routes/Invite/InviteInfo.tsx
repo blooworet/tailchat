@@ -11,6 +11,7 @@ import {
   showErrorToasts,
   t,
   useAsync,
+  useColorScheme,
 } from 'tailchat-shared';
 import { JoinBtn } from './JoinBtn';
 
@@ -20,6 +21,7 @@ interface Props {
 }
 export const InviteInfo: React.FC<Props> = React.memo((props) => {
   const { inviteCode } = props;
+  const { isDarkMode } = useColorScheme();
 
   const { loading, value: inviteInfo } = useAsync(async () => {
     try {
@@ -54,13 +56,14 @@ export const InviteInfo: React.FC<Props> = React.memo((props) => {
 
   return (
     <>
-      <div className="text-white">
+      <div className="text-gray-900 dark:text-white">
         <div>
           <Avatar
             className="mx-auto mb-4"
             size={64}
             src={inviteInfo.group.avatar}
             name={inviteInfo.group.name}
+            style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}
           />
         </div>
         <div>

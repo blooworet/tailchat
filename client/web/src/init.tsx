@@ -10,7 +10,6 @@ import {
   setTokenGetter,
   showErrorToasts,
   t,
-  fetchGlobalClientConfig,
   isDevelopment,
   isProduction,
   setErrorHook,
@@ -27,9 +26,13 @@ import _uniqueId from 'lodash/uniqueId';
 import { recordMeasure } from './utils/measure-helper';
 import { postMessageEvent } from './utils/event-helper';
 import { setImageUrlParser, setWebMetaFormConfig } from 'tailchat-design';
+// 注册内置消息扩展：斜杠命令点击解析器（M1）
+import './plugin/extra/slash-command';
 
 recordMeasure('init');
 postMessageEvent('init');
+
+// 移除无用的禁用类 A/B 开关同步逻辑
 
 if (isDevelopment) {
   import('source-ref-runtime').then(({ start }) => start());
@@ -128,6 +131,13 @@ setErrorHook((err) => {
   if (
     statusCode === 401 // Unauthorized (jwt过期)
   ) {
+    // 在用户页面访问时（未登录），不跳转到登录页
+    if (
+      window.location.pathname.match(/^\/[a-zA-Z0-9_]+$/) // 用户页面路由: /:username
+    ) {
+      return false;
+    }
+
     backToLoginPage();
 
     return false;
@@ -136,19 +146,4 @@ setErrorHook((err) => {
   return true;
 });
 
-/**
- * 获取前端配置
- */
-fetchGlobalClientConfig()
-  .then((config) => {
-    if (isProduction && !config.disableTelemetry) {
-      // 发送遥测信息
-      fetch(
-        `https://tianji.moonrailgun.com/telemetry/clnzoxcy10001vy2ohi4obbi0/cltpqundt1r4hoi4gk72uj3un.gif?name=tailchat&url=${window.location.origin}&v=${version}`
-      ).catch(() => {});
-    }
-  })
-  .catch((e) => {
-    showErrorToasts(t('全局配置加载失败'));
-    console.error('全局配置加载失败', e);
-  });
+// 注意：全局配置在登录成功后加载（见 Main/Provider.tsx）

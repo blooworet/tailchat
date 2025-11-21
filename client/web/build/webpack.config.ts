@@ -33,6 +33,7 @@ const DIST_PATH = path.resolve(ROOT_PATH, './dist');
 const ASSET_PATH = process.env.ASSET_PATH || '/';
 const PORT = Number(process.env.PORT || 11011);
 const ANALYSIS = process.env.ANALYSIS === 'true';
+const SHARED_PATH = path.resolve(ROOT_PATH, '../shared');
 
 declare module 'webpack' {
   interface Configuration {
@@ -152,6 +153,15 @@ const splitChunks: Required<Configuration>['optimization']['splitChunks'] = {
   maxInitialRequests: 30,
   enforceSizeThreshold: 50000,
   cacheGroups: {
+    // 将 tailchat-shared 抽为独立公共 chunk，确保多处复用同一份实例（含初始与异步块）
+    sharedlib: {
+      test: (module: any) => module?.resource && String(module.resource).startsWith(SHARED_PATH),
+      name: 'sharedlib',
+      chunks: 'all',
+      priority: 20,
+      reuseExistingChunk: true,
+      enforce: true,
+    },
     vendors: {
       chunks: 'initial',
       name: 'vendors',

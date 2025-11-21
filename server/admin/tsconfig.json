@@ -12,7 +12,7 @@
     "emitDecoratorMetadata": true,
     "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": false,
     "module": "CommonJS",
     "moduleResolution": "Node",
     "resolveJsonModule": true,

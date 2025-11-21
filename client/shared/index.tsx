@@ -2,7 +2,7 @@
 export { buildStorage } from './api/buildStorage';
 export { request } from './api/request';
 export type { RequestConfig } from './api/request';
-export { createSocket } from './api/socket';
+export { createSocket, getGlobalSocket, getOrCreateSocket } from './api/socket';
 export type { AppSocket } from './api/socket';
 
 // cache
@@ -98,7 +98,7 @@ export {
   refreshTokenGetter,
   setErrorHook,
 } from './manager/request';
-export { regSocketEventListener } from './manager/socket';
+export { regSocketEventListener, regRawSocketEventListener } from './manager/socket';
 export { getStorage, setStorage, useStorage } from './manager/storage';
 export {
   showToasts,
@@ -178,7 +178,7 @@ export type {
 export type { PluginManifest } from './model/plugin';
 export type { UserBaseInfo, UserLoginInfo, UserSettings } from './model/user';
 export {
-  loginWithEmail,
+  loginWithUsername,
   loginWithToken,
   registerWithEmail,
   modifyUserPassword,
@@ -187,6 +187,7 @@ export {
   createTemporaryUser,
   claimTemporaryUser,
   searchUserWithUniqueName,
+  findUserByUsernameCI,
   checkTokenValid,
   modifyUserField,
 } from './model/user';
@@ -275,3 +276,6 @@ export { uploadFile } from './utils/upload-helper';
 export type { UploadFileResult, UploadFileUsage } from './utils/upload-helper';
 export { parseUrlStr } from './utils/url-helper';
 export { sleep } from './utils/utils';
+
+// animation
+export * from './animation';

@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "TailProtoAudit",
+  "fields": [
+    { "name": "token", "type": "string" },
+    { "name": "type", "type": "string" },
+    { "name": "origin", "type": "string" },
+    { "name": "userId", "type": ["null","string"], "default": null },
+    { "name": "ts", "type": "long" },
+    { "name": "details", "type": { "type": "map", "values": "string" }, "default": {} }
+  ]
+}

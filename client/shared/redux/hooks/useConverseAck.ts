@@ -43,6 +43,12 @@ export function useConverseAck(converseId: string) {
         return;
       }
 
+      // 若本地 ack 已等于目标值，避免重复上报（页面刷新导致的重复渲染场景）
+      const current = lastMessageIdRef.current;
+      if (isValidStr(current) && lastMessageId === current) {
+        return;
+      }
+
       dispatch(chatActions.setConverseAck({ converseId, lastMessageId }));
       updateAckDebounce(converseId, lastMessageId);
       lastMessageIdRef.current = lastMessageId;

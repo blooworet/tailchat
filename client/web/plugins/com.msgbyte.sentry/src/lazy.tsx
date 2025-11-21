@@ -21,7 +21,7 @@ try {
     Sentry.setUser({
       id: userInfo._id,
       email: userInfo.email,
-      username: `${userInfo.nickname}#${userInfo.discriminator}`,
+      username: userInfo.username ? `@${userInfo.username}` : userInfo.nickname,
       avatar: userInfo.avatar,
       temporary: userInfo.temporary,
     });

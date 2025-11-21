@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "TailProtoKeyRotated",
+  "fields": [
+    { "name": "token", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "kv", "type": "int" },
+    { "name": "authKeyId", "type": "string" },
+    { "name": "originNode", "type": "string" },
+    { "name": "ts", "type": "long" }
+  ]
+}

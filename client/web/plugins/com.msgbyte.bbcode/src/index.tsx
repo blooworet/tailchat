@@ -1,23 +1,17 @@
 import React from 'react';
 import {
-  Loadable,
   regMessageRender,
   regMessageTextDecorators,
 } from '@capital/common';
 
 const PLUGIN_ID = 'com.msgbyte.bbcode';
 
-// 预加载
-import('./render');
+// 🚀 改为静态导入，提高性能和稳定性
+import BBCodeRender from './render';
+import { bbcodeToPlainText as serialize } from './bbcode/serialize';
 
-const BBCode = Loadable(() => import('./render'), {
-  componentName: `${PLUGIN_ID}:renderComponent`,
-  fallback: null,
-});
-let serialize: (bbcode: string) => string;
-import('./bbcode/serialize').then((module) => {
-  serialize = module.bbcodeToPlainText;
-});
+// 直接使用静态导入的组件，不需要Loadable包装
+const BBCode = BBCodeRender;
 
 regMessageRender((message) => {
   return <BBCode plainText={message} />;
@@ -36,12 +30,16 @@ regMessageTextDecorators(() => ({
   card: (plain, attrs) => {
     const h = [
       'card',
-      ...Object.entries(attrs).map(([k, v]) => `${k}=${v}`),
+      ...Object.entries(attrs).map(([k, v]) => {
+        // 属性值需要用双引号包围，避免特殊字符干扰BBCode解析
+        const escapedValue = String(v).replace(/"/g, '&quot;');
+        return `${k}="${escapedValue}"`;
+      }),
     ].join(' ');
 
     return `[${h}]${plain}[/card]`;
   },
   mention: (userId, userName) => `[at=${userId}]${userName}[/at]`,
   emoji: (emojiCode) => `[emoji]${emojiCode}[/emoji]`,
-  serialize: (plain: string) => (serialize ? serialize(plain) : plain),
+  serialize: (plain: string) => serialize(plain),
 }));

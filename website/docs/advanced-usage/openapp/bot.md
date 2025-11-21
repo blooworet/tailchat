@@ -74,10 +74,9 @@ Now we need to add some logic, for example, if we want to implement a repeating 
 import { TailchatHTTPClient, stripMentionTag } from 'tailchat-client-sdk';
 
 const host = '<your tailchat instance backend host>';
-const appId = '<appId>';
-const appSecret = '<appSecret>';
+const botToken = '<your bot token>'; // 即appSecret
 
-const client = new TailchatHTTPClient(host, appId, appSecret)
+const client = new TailchatHTTPClient(host, botToken)
 
 // ...
 
@@ -107,7 +106,7 @@ router.post('/bot/callback', async (ctx) => {
 });
 ```
 
-Please fill in `host`, `appId` and `appSecret` into the `appId` and `appSecret` obtained during creation, and `host` into the address of the `Tailchat` server, the official address of `nightly` is `https //tailchat-nightly.moonrailgun.com`
+Please fill in `host` with the address of the `Tailchat` server (the official address of `nightly` is `https://tailchat-nightly.moonrailgun.com`), and `botToken` with the bot token (appSecret) obtained during creation
 
 The content of the reply is not important, just make sure not to actively return an error message, Tailchat does not care about the returned content
 
@@ -139,8 +138,7 @@ Content-Type: application/json
 
 Body
 {
-  appId: <your app id>,
-  token: <md5(appId+appSecret)>,
+  token: <your bot token>, // 即appSecret
 }
 
 Response
@@ -152,7 +150,7 @@ Response
 }
 ```
 
-The `token` of the request body is a fixed value, which needs to be encrypted with the `md5` algorithm after splicing `appId` and `appSecret`. Finally get `jwt`, `jwt` must be on the request header in all subsequent requests
+The `token` in the request body is your bot token (appSecret). After login, you'll get a `jwt` which must be included in the header of all subsequent requests
 
 ```
 Header

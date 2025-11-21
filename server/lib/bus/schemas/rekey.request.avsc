@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "TailProtoRekeyRequest",
+  "fields": [
+    { "name": "token", "type": "string" },
+    { "name": "requestId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "originNode", "type": "string" },
+    { "name": "proposedKv", "type": ["null", "int"], "default": null },
+    { "name": "ts", "type": "long" },
+    { "name": "signature", "type": ["null", "string"], "default": null }
+  ]
+}

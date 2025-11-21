@@ -9,7 +9,8 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "strict": true,
-    "importsNotUsedAsValues": "error",
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": false,
   },
   "include": ["./src/*"]
 }

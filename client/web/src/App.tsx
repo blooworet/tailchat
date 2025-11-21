@@ -33,6 +33,11 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import enUS from 'antd/es/locale/en_US';
 import type { Locale } from 'antd/es/locale-provider';
 import { useInjectTianjiScript } from './hooks/useInjectTianjiScript';
+import { AnimationProvider } from 'tailchat-shared/animation';
+import 'tailchat-shared/animation/animations.css';
+import { ThemeProvider } from '../../shared/theme/ThemeProvider';
+import TelegramDarkSpec from '../themes/telegram-dark';
+import TelegramLightSpec from '../themes/telegram-light';
 
 const AppRouter: any = isElectron() ? HashRouter : BrowserRouter;
 
@@ -52,11 +57,19 @@ const EntryRoute = Loadable(
 
 const PanelRoute = Loadable(() => import('./routes/Panel'));
 
-const InviteRoute = Loadable(
+const InviteRedirect = Loadable(
   () =>
     import(
-      /* webpackChunkName: 'invite' */ /* webpackPreload: true */
-      './routes/Invite'
+      /* webpackChunkName: 'invite-redirect' */
+      './routes/Invite/redirect'
+    )
+);
+
+const UserProfileRoute = Loadable(
+  () =>
+    import(
+      /* webpackChunkName: 'userprofile' */
+      './routes/UserProfile'
     )
 );
 
@@ -87,7 +100,9 @@ const AppProvider: React.FC<PropsWithChildren> = React.memo((props) => {
       <AppRouter>
         <TcProvider>
           <DndProvider backend={HTML5Backend}>
-            <TcAntdProvider>{props.children}</TcAntdProvider>
+            <AnimationProvider>
+              <TcAntdProvider>{props.children}</TcAntdProvider>
+            </AnimationProvider>
           </DndProvider>
         </TcProvider>
       </AppRouter>
@@ -156,45 +171,79 @@ export const App: React.FC = React.memo(() => {
   return (
     <AppProvider>
       <AppHeader />
-      <AppContainer>
-        <AppRouterApi />
-        <ErrorBoundary>
-          <Routes>
-            <Route
-              path="/entry/*"
-              element={
-                <FallbackPortalHost>
-                  <EntryRoute />
-                </FallbackPortalHost>
+      <ThemeProvider
+        getThemeSpec={(scheme: string) => {
+          try {
+            if (typeof scheme === 'string') {
+              // Preferred path: explicit telegram
+              if (scheme.endsWith('+telegram')) {
+                if (scheme.startsWith('dark')) return TelegramDarkSpec as any;
+                if (scheme.startsWith('light')) return TelegramLightSpec as any;
+                // auto or others => follow media
+                const prefersDark = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : true;
+                return prefersDark ? (TelegramDarkSpec as any) : (TelegramLightSpec as any);
               }
-            />
-            <Route path="/main/*" element={<MainRoute />} />
-            <Route path="/panel/*" element={<PanelRoute />} />
-            <Route path="/invite/:inviteCode" element={<InviteRoute />} />
-            <Route
-              path="/plugin/*"
-              element={
-                <FallbackPortalHost>
-                  <Routes>
-                    {pluginRootRoute.map((r, i) => (
-                      <Route
-                        key={r.name}
-                        path={r.path ?? `/fallback${i}`}
-                        element={React.createElement(r.component)}
-                      />
-                    ))}
-                  </Routes>
-                </FallbackPortalHost>
-              }
-            />
 
-            <Route
-              path="/*"
-              element={<Navigate to="/entry" replace={true} />}
-            />
-          </Routes>
-        </ErrorBoundary>
-      </AppContainer>
+              // Fallback: map any non-telegram scheme to telegram dark/light
+              if (scheme === 'dark') return TelegramDarkSpec as any;
+              if (scheme === 'light') return TelegramLightSpec as any;
+              if (scheme === 'auto') {
+                const prefersDark = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : true;
+                return prefersDark ? (TelegramDarkSpec as any) : (TelegramLightSpec as any);
+              }
+
+              // composite like dark+foo -> use base
+              const [base] = scheme.split('+');
+              if (base === 'dark') return TelegramDarkSpec as any;
+              if (base === 'light') return TelegramLightSpec as any;
+              // otherwise default dark
+              return TelegramDarkSpec as any;
+            }
+          } catch {}
+          // final fallback
+          return TelegramDarkSpec as any;
+        }}
+      >
+        <AppContainer>
+          <AppRouterApi />
+          <ErrorBoundary>
+            <Routes>
+              <Route
+                path="/entry/*"
+                element={
+                  <FallbackPortalHost>
+                    <EntryRoute />
+                  </FallbackPortalHost>
+                }
+              />
+              <Route path="/main/*" element={<MainRoute />} />
+              <Route path="/panel/*" element={<PanelRoute />} />
+              <Route path="/invite/:inviteCode" element={<InviteRedirect />} />
+              <Route path="/login" element={<Navigate to="/entry/login" replace={true} />} />
+              <Route path="/register" element={<Navigate to="/entry/register" replace={true} />} />
+              <Route path="/guest" element={<Navigate to="/entry/guest" replace={true} />} />
+              <Route
+                path="/plugin/*"
+                element={
+                  <FallbackPortalHost>
+                    <Routes>
+                      {pluginRootRoute.map((r, i) => (
+                        <Route
+                          key={r.name}
+                          path={r.path ?? `/fallback${i}`}
+                          element={React.createElement(r.component)}
+                        />
+                      ))}
+                    </Routes>
+                  </FallbackPortalHost>
+                }
+              />
+              <Route path="/:username" element={<UserProfileRoute />} />
+              <Route path="/*" element={<Navigate to="/entry" replace={true} />} />
+            </Routes>
+          </ErrorBoundary>
+        </AppContainer>
+      </ThemeProvider>
     </AppProvider>
   );
 });

@@ -72,6 +72,20 @@ export class Message extends TimeStamps implements Base {
   meta?: MessageMetaStruct;
 
   /**
+   * 消息编辑时间
+   */
+  @prop()
+  editedAt?: Date;
+
+  /**
+   * 是否被编辑过
+   */
+  @prop({
+    default: false,
+  })
+  isEdited: boolean;
+
+  /**
    * 获取会话消息
    */
   static async fetchConverseMessage(

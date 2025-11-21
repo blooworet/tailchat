@@ -1,4 +1,17 @@
 ---
+title: TailProto WebSocket 安全传输
+---
+
+TailProto 提供：
+- 握手 ECDH-P256（返回 serverTime/sid/kv）
+- AES-GCM 加密（Envelope v2：v/k/s/sid/mid/ts/iv/d/mk/kv）
+- 重放保护（seq 递增 + mid 窗口去重）
+- 批量 crypt.call.batch（短延时聚合）
+- 密钥轮换 crypt.rekey（旧钥过渡期）
+
+开关与指标见英文版文档页面。
+
+---
 sidebar_position: 4
 title: Websocket 机器人
 ---

@@ -12,7 +12,7 @@ import { UnderlinedTag } from './UnderlinedTag';
 import { DeleteTag } from './DeleteTag';
 import { CardTag } from './CardTag';
 
-import './styles.less';
+// 注意：mini-star 单文件插件不推荐直接引入样式文件，避免运行时解析失败
 
 /**
  * Reference: https://en.wikipedia.org/wiki/BBCode

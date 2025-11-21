@@ -1,12 +1,4 @@
-import {
-  postRequest,
-  appendUrlSearch,
-  useAsyncRefresh,
-  useLocation,
-  urlSearchParse,
-  isValidStr,
-  useNavigate,
-} from '@capital/common';
+import { appendUrlSearch, useAsyncRefresh, useLocation, urlSearchParse, isValidStr, useNavigate, emitGlobalSocketEvent } from '@capital/common';
 import { useEffect, useState } from 'react';
 import { OpenApp } from './types';
 
@@ -20,8 +12,7 @@ export function useOpenAppList() {
     value: allApps = [],
     refresh,
   } = useAsyncRefresh(async (): Promise<OpenApp[]> => {
-    const { data } = await postRequest('/openapi/app/all');
-
+    const data = (await emitGlobalSocketEvent('openapi.app.all', {})) as OpenApp[];
     return data ?? [];
   }, []);
   const navigate = useNavigate();

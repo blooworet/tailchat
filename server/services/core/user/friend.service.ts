@@ -29,6 +29,12 @@ class FriendService extends TcService {
         friendUserId: 'string',
       },
     });
+    this.registerAction('isFriend', this.isFriend, {
+      params: {
+        userId: 'string',
+        targetId: 'string',
+      },
+    });
     this.registerAction('checkIsFriend', this.checkIsFriend, {
       params: {
         targetId: 'string',
@@ -76,6 +82,49 @@ class FriendService extends TcService {
     this.unicastNotify(ctx, user2, 'add', {
       userId: user1,
     });
+
+    // 确保建立 DM 会话并将双方加入各自的 dmlist，便于侧栏立即显示
+    try {
+      // 1) 确保 DM 存在（以 user1 作为当前用户，user2 为对端）
+      const ensureRes: { converseId: string } = await ctx.call(
+        'chat.converse.ensureDMWithUser',
+        { userId: String(user2) },
+        { meta: { ...ctx.meta, userId: String(user1) } }
+      );
+      const cid = String((ensureRes as any)?.converseId || '');
+      if (cid) {
+        // 2) 将双方加入 dmlist（保证刷新后仍显示，且侧栏实时出现）
+        try {
+          await ctx.call('user.dmlist.addConverse', { converseId: cid }, { meta: { ...ctx.meta, userId: String(user1) } });
+        } catch {}
+        try {
+          await ctx.call('user.dmlist.addConverse', { converseId: cid }, { meta: { ...ctx.meta, userId: String(user2) } });
+        } catch {}
+        // 3) 向双方各自单播最新的会话信息，驱动前端实时加入侧栏
+        try {
+          const info1 = await ctx.call('chat.converse.findConverseInfo', { converseId: cid }, { meta: { ...ctx.meta, userId: String(user1) } });
+          await ctx.call('gateway.notify', { type: 'unicast', target: String(user1), eventName: 'chat.converse.updateDMConverse', eventData: info1 });
+        } catch {}
+        try {
+          const info2 = await ctx.call('chat.converse.findConverseInfo', { converseId: cid }, { meta: { ...ctx.meta, userId: String(user2) } });
+          await ctx.call('gateway.notify', { type: 'unicast', target: String(user2), eventName: 'chat.converse.updateDMConverse', eventData: info2 });
+        } catch {}
+      }
+    } catch {}
+  }
+
+  /**
+   * 检查是否为好友关系
+   */
+  async isFriend(ctx: TcContext<{ userId: string; targetId: string }>) {
+    const { userId, targetId } = ctx.params;
+
+    const friendship = await this.adapter.model.findOne({
+      from: userId,
+      to: targetId,
+    });
+
+    return !!friendship;
   }
 
   /**

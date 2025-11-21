@@ -68,6 +68,32 @@ export interface SharedEventMap {
    * 用户设置发生了变更
    */
   userSettingsUpdate: (userSettings: UserSettings) => void;
+
+  /**
+   * 统一应用输入事件
+   * 用于从消息点击、建议面板等入口，将文本填充/追加/直接发送到输入框
+   * v2: 增加来源与追踪字段（保持向后兼容）
+   */
+  applyChatInput: (payload: {
+    text: string;
+    mode?: 'replace' | 'append' | 'send';
+    /** 事件来源：inline | keyboard | decorator | other */
+    source?: string;
+    /** 前后端贯穿的追踪ID */
+    traceId?: string;
+    /** 动作ID（与 inlineActions 中的 actionId 对应） */
+    actionId?: string;
+  }) => void;
+
+  /**
+   * E2EE 密钥更新（例如创建/轮换）
+   */
+  'e2ee.keyUpdate': (payload: { converseId: string }) => void;
+
+  /**
+   * E2EE 状态变更（开启/关闭）
+   */
+  'e2ee.stateChanged': (payload: { converseId: string; enabled: boolean }) => void;
 }
 export type SharedEventType = keyof SharedEventMap;
 

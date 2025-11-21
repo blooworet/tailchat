@@ -190,6 +190,21 @@ class GroupService extends TcService {
   async applyInvite(ctx: TcContext<{ code: string }>): Promise<void> {
     const code = ctx.params.code;
     const t = ctx.meta.t;
+    // Scope: 机器人的入群需要 'group.join' 权限（仅在存在 token 时解析）
+    const decoded: any =
+      typeof ctx.meta.token === 'string'
+        ? await ctx.call('user.extractTokenMeta', { token: ctx.meta.token })
+        : null;
+    if (decoded && decoded.btid) {
+      try {
+        const rec = await (require('../../../models/bottoken').default).findById(decoded.btid).lean().exec();
+        if (!rec || !Array.isArray(rec.scopes) || !rec.scopes.includes('group.join')) {
+          throw new NoPermissionError(t('Bot scope denied: group.join'));
+        }
+      } catch (e) {
+        throw new NoPermissionError(t('Bot scope denied: group.join'));
+      }
+    }
 
     const invite = await this.adapter.model.findOne({
       code,

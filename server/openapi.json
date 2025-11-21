@@ -247,9 +247,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "appId": {
-                    "type": "string"
-                  },
                   "token": {
                     "type": "string"
                   },
@@ -280,6 +277,45 @@
       }
     },
     "/openapi.app/get": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "appSecret": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.app/findById": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.app/findByAppId": {
       "post": {
         "requestBody": {
           "content": {
@@ -331,6 +367,9 @@
                 "properties": {
                   "appId": {
                     "type": "string"
+                  },
+                  "appSecret": {
+                    "type": "string"
                   }
                 }
               }
@@ -348,6 +387,9 @@
                 "type": "object",
                 "properties": {
                   "appId": {
+                    "type": "string"
+                  },
+                  "appSecret": {
                     "type": "string"
                   },
                   "fieldName": {
@@ -371,7 +413,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "appId": {
+                  "appSecret": {
                     "type": "string"
                   },
                   "capability": {
@@ -396,6 +438,9 @@
                   "appId": {
                     "type": "string"
                   },
+                  "appSecret": {
+                    "type": "string"
+                  },
                   "fieldName": {
                     "type": "string"
                   },
@@ -411,6 +456,8 @@
     },
     "/openapi.app/setAppBotInfo": {
       "post": {
+        "summary": "设置机器人配置信息",
+        "description": "设置机器人的配置信息，包括回调地址、用户名、群组权限和命令列表",
         "requestBody": {
           "content": {
             "application/json": {
@@ -418,13 +465,264 @@
                 "type": "object",
                 "properties": {
                   "appId": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "应用ID（与appSecret二选一）"
+                  },
+                  "appSecret": {
+                    "type": "string",
+                    "description": "应用密钥（与appId二选一）"
                   },
                   "fieldName": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": ["callbackUrl", "username", "allowGroup", "commands"],
+                    "description": "要设置的字段名"
                   },
                   "fieldValue": {
-                    "type": "any"
+                    "description": "字段值，根据fieldName类型不同",
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "description": "当fieldName为callbackUrl或username时"
+                      },
+                      {
+                        "type": "boolean",
+                        "description": "当fieldName为allowGroup时"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "command": {
+                              "type": "string",
+                              "description": "命令名，最多32个字符，仅支持小写字母、数字和下划线",
+                              "maxLength": 32,
+                              "pattern": "^[a-z0-9_]+$"
+                            },
+                            "description": {
+                              "type": "string",
+                              "description": "命令描述，最多256个字符",
+                              "maxLength": 256
+                            },
+                            "scope": {
+                              "type": "object",
+                              "description": "命令可见范围，可选",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": ["default", "all_private_chats", "all_group_chats", "chat", "chat_member"],
+                                  "description": "范围类型"
+                                },
+                                "chat_id": {
+                                  "type": "string",
+                                  "description": "聊天ID，当type为chat或chat_member时必需"
+                                },
+                                "user_id": {
+                                  "type": "string",
+                                  "description": "用户ID，当type为chat_member时必需"
+                                }
+                              },
+                              "required": ["type"]
+                            }
+                          },
+                          "required": ["command", "description"]
+                        },
+                        "description": "当fieldName为commands时的命令列表"
+                      }
+                    ]
+                  }
+                },
+                "required": ["fieldName", "fieldValue"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.app/getBotCommands": {
+      "post": {
+        "summary": "获取机器人命令列表",
+        "description": "根据应用ID获取机器人的命令列表",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string",
+                    "description": "应用ID"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "enum": ["default", "all_private_chats", "all_group_chats", "chat", "chat_member"],
+                    "description": "可选的范围筛选"
+                  }
+                },
+                "required": ["appId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功获取命令列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "appId": {
+                      "type": "string",
+                      "description": "应用ID"
+                    },
+                    "appName": {
+                      "type": "string",
+                      "description": "应用名称"
+                    },
+                    "commands": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "command": {
+                            "type": "string",
+                            "description": "命令名，最多32个字符，仅支持小写字母、数字和下划线",
+                            "maxLength": 32,
+                            "pattern": "^[a-z0-9_]+$"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "命令描述，最多256个字符",
+                            "maxLength": 256
+                          },
+                          "scope": {
+                            "type": "object",
+                            "description": "命令可见范围，可选",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["default", "all_private_chats", "all_group_chats", "chat", "chat_member"],
+                                "description": "范围类型"
+                              },
+                              "chat_id": {
+                                "type": "string",
+                                "description": "聊天ID，当type为chat或chat_member时必需"
+                              },
+                              "user_id": {
+                                "type": "string",
+                                "description": "用户ID，当type为chat_member时必需"
+                              }
+                            },
+                            "required": ["type"]
+                          }
+                        },
+                        "required": ["command", "description"]
+                      },
+                      "description": "命令列表"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.app/getBotCommandsByScope": {
+      "post": {
+        "summary": "按范围获取机器人命令列表",
+        "description": "根据应用ID和范围类型获取机器人的命令列表",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string",
+                    "description": "应用ID"
+                  },
+                  "scopeType": {
+                    "type": "string",
+                    "enum": ["default", "all_private_chats", "all_group_chats", "chat", "chat_member"],
+                    "description": "范围类型"
+                  },
+                  "chatId": {
+                    "type": "string",
+                    "description": "聊天ID，当scopeType为chat或chat_member时必需"
+                  },
+                  "userId": {
+                    "type": "string",
+                    "description": "用户ID，当scopeType为chat_member时必需"
+                  }
+                },
+                "required": ["appId", "scopeType"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功获取命令列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "appId": {
+                      "type": "string",
+                      "description": "应用ID"
+                    },
+                    "appName": {
+                      "type": "string",
+                      "description": "应用名称"
+                    },
+                    "scopeType": {
+                      "type": "string",
+                      "description": "范围类型"
+                    },
+                    "commands": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "command": {
+                            "type": "string",
+                            "description": "命令名，最多32个字符，仅支持小写字母、数字和下划线",
+                            "maxLength": 32,
+                            "pattern": "^[a-z0-9_]+$"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "命令描述，最多256个字符",
+                            "maxLength": 256
+                          },
+                          "scope": {
+                            "type": "object",
+                            "description": "命令可见范围，可选",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["default", "all_private_chats", "all_group_chats", "chat", "chat_member"],
+                                "description": "范围类型"
+                              },
+                              "chat_id": {
+                                "type": "string",
+                                "description": "聊天ID，当type为chat或chat_member时必需"
+                              },
+                              "user_id": {
+                                "type": "string",
+                                "description": "用户ID，当type为chat_member时必需"
+                              }
+                            },
+                            "required": ["type"]
+                          }
+                        },
+                        "required": ["command", "description"]
+                      },
+                      "description": "命令列表"
+                    }
                   }
                 }
               }
@@ -441,9 +739,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "appId": {
-                    "type": "string"
-                  },
                   "token": {
                     "type": "string"
                   }
@@ -464,6 +759,9 @@
                 "properties": {
                   "appId": {
                     "type": "string"
+                  },
+                  "appSecret": {
+                    "type": "string"
                   }
                 }
               }
@@ -474,6 +772,8 @@
     },
     "/openapi.integration/addBotUser": {
       "post": {
+        "summary": "通过 appId 添加机器人到群组",
+        "description": "使用应用ID将机器人添加到指定群组中",
         "requestBody": {
           "content": {
             "application/json": {
@@ -481,12 +781,79 @@
                 "type": "object",
                 "properties": {
                   "appId": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "应用ID（公开信息）"
                   },
                   "groupId": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "目标群组ID"
                   }
-                }
+                },
+                "required": ["appId", "groupId"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.integration/addBotUserByUsername": {
+      "post": {
+        "summary": "通过用户名添加机器人到群组",
+        "description": "使用机器人用户名将机器人添加到指定群组中",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "机器人用户名"
+                  },
+                  "groupId": {
+                    "type": "string",
+                    "description": "目标群组ID"
+                  }
+                },
+                "required": ["username", "groupId"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.integration/addBotUserUnified": {
+      "post": {
+        "summary": "统一的机器人集成接口",
+        "description": "支持通过 appId 或 username 添加机器人到群组，两种方式二选一",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string",
+                    "description": "应用ID（与username二选一）"
+                  },
+                  "username": {
+                    "type": "string",
+                    "description": "机器人用户名（与appId二选一）"
+                  },
+                  "groupId": {
+                    "type": "string",
+                    "description": "目标群组ID"
+                  }
+                },
+                "required": ["groupId"],
+                "oneOf": [
+                  {
+                    "required": ["appId"]
+                  },
+                  {
+                    "required": ["username"]
+                  }
+                ]
               }
             }
           }
@@ -944,6 +1311,36 @@
                   "emoji": {
                     "type": "string"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat.message/editMessage": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "messageId": {
+                    "type": "string"
+                  },
+                  "content": [
+                    {
+                      "type": "string",
+                      "optional": true
+                    }
+                  ],
+                  "meta": [
+                    {
+                      "type": "any",
+                      "optional": true
+                    }
+                  ]
                 }
               }
             }

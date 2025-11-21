@@ -50,14 +50,14 @@ export const GroupUserPopover: React.FC<{
   }, [userInfo.avatar]);
 
   return (
-    <div className="w-80 -mx-4 -my-3 bg-inherit">
+    <div className="w-80 -mx-4 -my-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
       <UserProfileContainer userInfo={userInfo}>
-        <div className="text-xl">
-          <span className="font-semibold">
+        <div className="text-center mb-2">
+          <div className="text-xl font-bold text-gray-900 dark:text-white mb-1">
             <UserName userId={userId} />
-          </span>
-          {!hideGroupMemberDiscriminator && (
-            <span className="opacity-60 ml-1">#{userInfo.discriminator}</span>
+          </div>
+          {!hideGroupMemberDiscriminator && userInfo.username && (
+            <div className="text-sm text-gray-500 dark:text-gray-400">@{userInfo.username}</div>
           )}
         </div>
 

@@ -15,7 +15,7 @@ export const zhTranslation = {
         username: '用户名',
         password: '密码',
         nickname: '昵称',
-        discriminator: '标识符',
+        discriminator: '标识符(已弃用)',
         temporary: '是否游客',
         type: '用户类型',
         emailVerified: '邮箱校验',

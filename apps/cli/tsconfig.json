@@ -10,7 +10,10 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "skipLibCheck": true,
-    "noEmit": false
+    "noEmit": false,
+    "types": ["node"],
+    "lib": ["es2019"],
+    "resolveJsonModule": true
   },
   "exclude": ["./templates"]
 }

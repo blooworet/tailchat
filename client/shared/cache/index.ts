@@ -18,4 +18,6 @@ export const asyncStoragePersister = createAsyncStoragePersister({
     setItem: (key: string, value: string) => getStorage().set(key, value),
     removeItem: (key: string) => getStorage().remove(key),
   },
+  // react-native-storage 不允许 key 包含下划线，改用无下划线 key
+  key: 'rqOfflineCache',
 });

@@ -11,6 +11,7 @@ import {
 } from '@capital/component';
 import { Translate } from '../../translate';
 import { useOpenAppAction } from './useOpenAppAction';
+import { formatBotUsername } from '../../utils/botUsernameValidator';
 import styled from 'styled-components';
 import './Profile.less';
 
@@ -26,7 +27,7 @@ const TwoColumnContainer = styled.div`
  * 基础信息
  */
 const Profile: React.FC = React.memo(() => {
-  const { appId, appSecret, appName, appDesc, appIcon } = useOpenAppInfo();
+  const { appId, appSecret, appName, appDesc, appIcon, bot, capability } = useOpenAppInfo();
 
   const { handleSetAppInfo, handleDeleteApp } = useOpenAppAction();
 
@@ -51,6 +52,21 @@ const Profile: React.FC = React.memo(() => {
             renderEditor={DefaultFullModalInputEditorRender}
             onSave={(val) => handleSetAppInfo('appDesc', val)}
           />
+
+          {capability?.includes('bot') && (
+            <FullModalField
+              title={Translate.botUsername}
+              content={
+                bot?.username ? (
+                  <span className="font-mono text-sm">
+                    {formatBotUsername(bot.username)}
+                  </span>
+                ) : (
+                  <span className="text-gray-500 text-sm">{Translate.botUsernameNotSet}</span>
+                )
+              }
+            />
+          )}
         </div>
 
         <div>
@@ -69,9 +85,14 @@ const Profile: React.FC = React.memo(() => {
       <h2>{Translate.app.appcret}</h2>
 
       <div>
-        <FullModalField title="App ID" content={appId} />
+        {appId && (
+          <FullModalField
+            title="App ID"
+            content={<span className="font-mono text-sm">{appId}</span>}
+          />
+        )}
         <FullModalField
-          title="App Secret"
+          title={Translate.appSecret}
           content={<SensitiveText text={appSecret} />}
         />
       </div>

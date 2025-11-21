@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PillTabPane, PillTabs } from '@/components/PillTabs';
 import { Divider } from 'antd';
 import React from 'react';
-import { t, useAsync } from 'tailchat-shared';
+import { t, useAsync } from '../../../../shared';
 import { builtinPlugins } from '../builtin';
 import { pluginManager } from '../manager';
 import { PluginStoreItem } from './Item';
@@ -32,15 +32,16 @@ function usePluginStoreData() {
   };
 }
 
-export const PluginStore: React.FC = React.memo(() => {
+export const PluginStore = React.memo(() => {
   const { loading, installedPluginList, allPlugins } = usePluginStoreData();
 
   if (loading) {
     return <LoadingSpinner tip={t('正在加载插件列表')} />;
   }
 
-  const installedPluginNameList = installedPluginList.map((p) => p.name);
-  const builtinPluginNameList = builtinPlugins.map((p) => p.name);
+  const installedPluginNameList = installedPluginList.map((p: any) => p.name);
+  const builtinPluginNameList = builtinPlugins.map((p: any) => p.name);
+  
 
   return (
     <div className="p-2 w-full">
@@ -91,8 +92,8 @@ export const PluginStore: React.FC = React.memo(() => {
 
                 <div className="flex flex-wrap">
                   {allPlugins
-                    .filter((p) => !builtinPluginNameList.includes(p.name)) // 插件中心只显示不包含内置插件的插件
-                    .map((plugin) => (
+                    .filter((p: any) => !builtinPluginNameList.includes(p.name)) // 插件中心只显示不包含内置插件的插件
+                    .map((plugin: any) => (
                       <PluginStoreItem
                         key={plugin.name}
                         manifest={plugin}
@@ -106,7 +107,7 @@ export const PluginStore: React.FC = React.memo(() => {
             ),
           },
           {
-            key: '3',
+            key: '4',
             label: <span className="text-green-400">{t('手动安装')}</span>,
             children: <ManualInstall />,
           },

@@ -3,7 +3,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "strict": true,
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": true,
     "experimentalDecorators": true,
   }
 }

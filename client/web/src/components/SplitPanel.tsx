@@ -2,7 +2,6 @@ import clsx from 'clsx';
 import React, { PropsWithChildren } from 'react';
 import Split from 'react-split';
 import { useStorage } from 'tailchat-shared';
-import './SplitPanel.less';
 
 /**
  * Reference: https://split.js.org/#/

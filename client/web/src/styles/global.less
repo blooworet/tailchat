@@ -8,22 +8,314 @@ body {
 }
 
 #tailchat-app {
-  @apply text-typography-light bg-content-light;
+  @apply text-typography-light;
+  @apply bg-content-light;
 
   --tc-background-image: url(../../assets/images/bg.webp);
   --tc-content-background-image: '';
   --tc-content-background-image-opacity: 0.2;
   --tc-content-background-color: rgba(243, 244, 246, 1); // copy from bg-content-light
 
+  /* Design Tokens (Phase 1): base defaults */
+  --tc-color-primary: var(--tc-inline-text-color, #6366F1);
+  --tc-text-primary: #111827;
+  --tc-text-secondary: #6B7280;
+  --tc-surface-bg: #FFFFFF;
+  --tc-surface-muted: #F3F4F6;
+  --tc-border-color: rgba(0,0,0,0.1);
+  --tc-radius-sm: 0.25rem;
+  --tc-radius-md: 0.375rem; /* rounded-md */
+  --tc-radius-lg: 0.5rem;
+  --tc-radius-xl: 0.75rem;
+  --tc-radius-pill: 9999px;
+  --tc-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --tc-shadow-md: 0 4px 6px rgba(0,0,0,0.08);
+  --tc-shadow-lg: 0 10px 15px rgba(0,0,0,0.10);
+  --tc-motion-scale: 1;
+  --tc-input-radius: var(--tc-radius-md);
+  --tc-surface-shadow: none;
+  --tc-icon-button-size: 2.5rem; /* 40px, equals w-10 h-10 */
+
+  /* Map ReplyKeyboardPanel vars to tokens */
+  --rk-bg: var(--tc-surface-muted);
+  --rk-border: var(--tc-border-color);
+  --rk-radius: var(--tc-radius-md);
+  --rk-shadow: var(--tc-shadow-sm);
+  --rk-pad-x: 10px;
+  --rk-pad-y: 8px;
+  --rk-pad-x-resize: 12px;
+  --rk-pad-y-resize: 10px;
+
+  /* Friend Request Banner (tokens) */
+  --tc-banner-bg: linear-gradient(to right, #f0f4f8, #e2e8f0);
+  --tc-banner-border: rgba(148, 163, 184, 0.3);
+  --tc-banner-icon-bg: #e2e8f0;
+  --tc-banner-icon-color: #3b82f6;
+  --tc-banner-title-color: #1e293b;
+  --tc-banner-subtitle-color: #64748b;
+  --tc-banner-button-bg: #3b82f6;
+  --tc-banner-close-hover-bg: #f1f5f9;
+
+  /* Audio glow/filter tokens (default: none) */
+  --tc-audio-player-filter: none;
+  --tc-audio-player-filter-hover: none;
+  --tc-audio-play-btn-filter: none;
+
+  /* Input area button group tokens */
+  --tc-input-button-gap: 0.25rem; /* 4px, equals space-x-1 */
+  --tc-input-button-hover-bg: rgba(0,0,0,0.04);
+  --tc-input-button-hover-bg-dark: rgba(255,255,255,0.06);
+
   .tc-background {
-    @apply bg-center bg-cover bg-no-repeat;
+    @apply bg-center;
+    @apply bg-cover;
+    @apply bg-no-repeat;
     background-image: var(--tc-background-image);
   }
 
+  /* Apply tokens to shared surfaces (non-destructive) */
+  .input-content-area {
+    border-radius: var(--tc-input-radius);
+    box-shadow: var(--tc-surface-shadow);
+  }
+
+  button.command-menu-button {
+    width: var(--tc-icon-button-size);
+    height: var(--tc-icon-button-size);
+  }
+
+  /* Command List (Expanded) - tokenized container */
+  .command-list-container {
+    border-radius: var(--tc-input-radius);
+    box-shadow: var(--tc-shadow-lg);
+  }
+
+  .command-list-header {
+    background-color: var(--tc-surface-muted);
+    color: var(--tc-text-secondary);
+    border-bottom: 1px solid var(--tc-border-color);
+  }
+
+  .command-list-body {
+    /* no visual change; hook for future token overrides */
+  }
+
+  .command-list-item {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .command-list-item:hover {
+    background-color: rgba(0,0,0,0.04);
+  }
+  &.dark .command-list-item:hover {
+    background-color: rgba(255,255,255,0.06);
+  }
+
+  /* Input area button group: only spacing, non-destructive */
+  .input-button-group {
+    gap: var(--tc-input-button-gap);
+  }
+
   .tc-content-background {
-    @apply absolute block inset-0 bg-contain bg-no-repeat bg-right-bottom pointer-events-none;
+    @apply absolute;
+    @apply block;
+    @apply inset-0;
+    @apply bg-contain;
+    @apply bg-no-repeat;
+    @apply bg-right-bottom;
+    @apply pointer-events-none;
     background-image: var(--tc-content-background-image);
     opacity: var(--tc-content-background-image-opacity);
+  }
+
+  /* Inline Actions theme (M5) - mapped to tokens with fallbacks */
+  --tc-inline-text-color: var(--tc-color-primary, rgba(99, 102, 241, 1)); /* indigo-500 */
+  --tc-inline-text-hover: rgba(165, 180, 252, 1); /* indigo-300 */
+  --tc-inline-focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.35);
+  --tc-inline-btn-fg: rgba(49, 46, 129, 1); /* indigo-900 */
+  --tc-inline-btn-bg: var(--tc-surface-muted, rgba(199, 210, 254, 1)); /* indigo-200 */
+  --tc-inline-btn-hover-bg: rgba(165, 180, 252, 1); /* indigo-300 */
+  --tc-inline-btn-active-bg: rgba(129, 140, 248, 1); /* indigo-400 */
+  --tc-inline-btn-disabled-bg: var(--tc-border-color, rgba(229, 231, 235, 1)); /* gray-200 */
+  --tc-inline-btn-radius: var(--tc-radius-pill, 9999px); /* pill as default */
+
+  /* Audio Components theme (Light Mode) */
+  --tc-audio-bg: rgba(243, 244, 246, 0.8);
+  --tc-audio-bg-own: rgba(239, 246, 255, 0.9);
+  --tc-audio-border: rgba(209, 213, 219, 1);
+  --tc-audio-border-own: rgba(147, 197, 253, 0.8);
+  --tc-audio-text: rgba(31, 41, 55, 1);
+  --tc-audio-text-secondary: rgba(107, 114, 128, 1);
+  --tc-audio-waveform-fill: #ADD3F7;
+  --tc-audio-waveform-progress: #3390EC;
+  --tc-audio-waveform-own-fill: #AEDFA4;
+  --tc-audio-waveform-own-progress: #4FAE4E;
+  --tc-audio-btn-bg: #3390EC;
+  --tc-audio-btn-bg-own: #4FAE4E;
+  --tc-audio-btn-hover: #2563EB;
+  --tc-audio-btn-hover-own: #22C55E;
+  --tc-audio-btn-text: #FFFFFF;
+  --tc-audio-btn-disabled: rgba(156, 163, 175, 1);
+  --tc-audio-loading: #6B7280;
+  --tc-audio-error: #EF4444;
+  --tc-audio-success: #10B981;
+  --tc-audio-hover: rgba(0, 0, 0, 0.05);
+  --tc-audio-active: rgba(0, 0, 0, 0.1);
+  --tc-audio-focus: rgba(99, 102, 241, 0.35);
+
+  .tc-inline-action-text {
+    color: var(--tc-inline-text-color);
+    text-underline-offset: 2px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--tc-inline-text-hover);
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--tc-inline-focus-ring);
+      border-radius: 2px;
+    }
+  }
+
+  .tc-inline-action-btn {
+    /* 基础样式 */
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: normal;
+    max-width: 100%;
+    word-break: break-word;
+    text-align: center;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    
+    /* 默认样式 */
+    color: var(--tc-inline-btn-fg);
+    background-color: var(--tc-inline-btn-bg);
+    
+    /* 平滑过渡 */
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* 微妙阴影 */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    &:hover {
+      background-color: var(--tc-inline-btn-hover-bg);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      background-color: var(--tc-inline-btn-active-bg);
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--tc-inline-focus-ring);
+    }
+
+    &[aria-disabled='true'] {
+      cursor: not-allowed;
+      opacity: 0.6;
+      background-color: var(--tc-inline-btn-disabled-bg);
+      transform: none;
+      box-shadow: none;
+    }
+    
+    /* 按钮优先级样式 */
+    &[data-priority="primary"] {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.2);
+      
+      &:hover {
+        background: linear-gradient(135deg, #4338ca, #4f46e5);
+        box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+      }
+    }
+    
+    &[data-priority="danger"] {
+      background: linear-gradient(135deg, #ef4444, #f87171);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.2);
+      
+      &:hover {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+      }
+    }
+    
+    &[data-priority="success"] {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.2);
+      
+      &:hover {
+        background: linear-gradient(135deg, #059669, #10b981);
+        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+      }
+    }
+    
+    /* 按钮类型图标 */
+    &[data-action-type="next_page"]::before,
+    &[data-action-type="prev_page"]::before,
+    &[data-action-type="confirm_delete"]::before,
+    &[data-action-type="cancel"]::before {
+      font-size: 14px;
+      line-height: 1;
+    }
+    
+    &[data-action-type="next_page"]::before { content: "→"; }
+    &[data-action-type="prev_page"]::before { content: "←"; }
+    &[data-action-type="confirm_delete"]::before { content: "🗑️"; }
+    &[data-action-type="cancel"]::before { content: "✕"; }
+  }
+
+  // 暗色主题覆盖（M5）
+  &.dark {
+    --tc-inline-text-color: var(--tc-text-secondary, rgba(165, 180, 252, 1)); // indigo-300
+    --tc-inline-text-hover: rgba(199, 210, 254, 1); // indigo-200
+    --tc-inline-focus-ring: 0 0 0 3px rgba(165, 180, 252, 0.35);
+    --tc-inline-btn-fg: var(--tc-text-primary, rgba(17, 24, 39, 1)); /* gray-900 */
+    --tc-inline-btn-bg: var(--tc-surface-muted, rgba(99, 102, 241, 0.22));
+    --tc-inline-btn-hover-bg: rgba(129, 140, 248, 0.35);
+    --tc-inline-btn-active-bg: rgba(165, 180, 252, 0.45);
+    --tc-inline-btn-disabled-bg: var(--tc-border-color, rgba(75, 85, 99, 0.35));
+
+    /* Audio Components theme (Dark Mode) */
+    --tc-audio-bg: rgba(31, 41, 55, 0.8);
+    --tc-audio-bg-own: rgba(55, 65, 81, 0.9);
+    --tc-audio-border: rgba(75, 85, 99, 1);
+    --tc-audio-border-own: rgba(156, 163, 175, 0.8);
+    --tc-audio-text: rgba(243, 244, 246, 1);
+    --tc-audio-text-secondary: rgba(156, 163, 175, 1);
+    --tc-audio-waveform-fill: #494A78;
+    --tc-audio-waveform-progress: #8774E1;
+    --tc-audio-waveform-own-fill: rgba(57, 197, 187, 0.7);
+    --tc-audio-waveform-own-progress: #FFFFFF;
+    --tc-audio-btn-bg: #8774E1;
+    --tc-audio-btn-bg-own: #6366F1;
+    --tc-audio-btn-hover: #7C3AED;
+    --tc-audio-btn-hover-own: #4F46E5;
+    --tc-audio-btn-text: #FFFFFF;
+    --tc-audio-btn-disabled: rgba(75, 85, 99, 1);
+    --tc-audio-loading: #9CA3AF;
+    --tc-audio-error: #F87171;
+    --tc-audio-success: #34D399;
+    --tc-audio-hover: rgba(255, 255, 255, 0.05);
+    --tc-audio-active: rgba(255, 255, 255, 0.1);
+    --tc-audio-focus: rgba(139, 92, 246, 0.35);
   }
 
   code {
@@ -47,7 +339,8 @@ body {
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-black bg-opacity-10;
+    @apply bg-black;
+    @apply bg-opacity-10;
     border-color: transparent;
     background-clip: padding-box;
     border-width: 4px;
@@ -55,12 +348,14 @@ body {
     border-radius: 8px;
 
     &:hover {
-      @apply bg-black bg-opacity-20;
+      @apply bg-black;
+      @apply bg-opacity-20;
     }
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-black bg-opacity-5;
+    @apply bg-black;
+    @apply bg-opacity-5;
     border-color: transparent;
     background-clip: padding-box;
     border-width: 4px;
@@ -68,10 +363,32 @@ body {
     border-radius: 8px;
   }
 
+  /* Miku主题覆盖: 已清理 */
+
+  /* Telegram主题覆盖: 已由 ThemeSpec 注入变量，移除选择器块 */
+
   // 深色模式覆盖
   &.dark {
-    @apply text-typography-dark bg-content-dark;
+    @apply text-typography-dark;
+    @apply bg-content-dark;
     --tc-content-background-color: rgba(55, 65, 81, 1);; // copy from bg-content-light
+    /* Tokens override for dark */
+    --tc-text-primary: #F3F4F6;
+    --tc-text-secondary: #9CA3AF;
+    --tc-surface-bg: #374151;
+    --tc-surface-muted: #4B5563;
+    --tc-border-color: rgba(255,255,255,0.12);
+    /* Banner tokens for dark */
+    --tc-banner-bg: linear-gradient(to right, #1e293b, #0f172a);
+    --tc-banner-border: rgba(148, 163, 184, 0.2);
+    --tc-banner-icon-bg: #334155;
+    --tc-banner-icon-color: #60a5fa;
+    --tc-banner-title-color: #f1f5f9;
+    --tc-banner-subtitle-color: #cbd5e1;
+    --tc-banner-button-bg: #3b82f6;
+    --tc-banner-close-hover-bg: #475569;
+  
+  
 
     h1,h2,h3,h4,h5,h6 {
       @apply text-typography-dark;
@@ -93,4 +410,24 @@ body {
       background-color: #2f3136;
     }
   }
+}
+
+/* Generic card/panel/list hooks (non-destructive) */
+.tc-card,
+.tc-panel {
+  border-radius: var(--tc-radius-lg);
+  background: var(--tc-surface-bg);
+  box-shadow: var(--tc-shadow-sm);
+  border: 1px solid var(--tc-border-color);
+}
+
+.tc-list-item {
+  border-radius: var(--tc-radius-md);
+  border: 1px solid transparent;
+}
+.tc-list-item:hover {
+  background-color: rgba(0,0,0,0.04);
+}
+#tailchat-app.dark .tc-list-item:hover {
+  background-color: rgba(255,255,255,0.06);
 }

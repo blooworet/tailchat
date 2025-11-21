@@ -1,4 +1,4 @@
-import { request } from '../api/request';
+import { getOrCreateSocket } from '../api/socket';
 import { buildCachedRequest } from '../cache/utils';
 
 /**
@@ -7,13 +7,13 @@ import { buildCachedRequest } from '../cache/utils';
 export const fetchAvailableServices = buildCachedRequest(
   'fetchAvailableServices',
   async (): Promise<string[]> => {
-    const { data } = await request.get<{
+    const socket = await getOrCreateSocket();
+    const res = await socket.request<{
       nodeID: string;
       cpu: unknown;
       memory: unknown;
       services: string[];
-    }>('/api/gateway/health');
-
-    return data.services;
+    }>('gateway.health');
+    return Array.isArray(res?.services) ? res.services : [];
   }
 );

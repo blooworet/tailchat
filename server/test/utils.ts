@@ -108,3 +108,19 @@ export function createTestUserToken(
     }
   );
 }
+
+/**
+ * 用于集成测试的 broker 调用
+ */
+export async function brokerCall(actionName: string, params?: any): Promise<any> {
+  const broker = new TcBroker();
+  try {
+    await broker.start();
+    const result = await broker.call(actionName, params);
+    await broker.stop();
+    return result;
+  } catch (error) {
+    await broker.stop();
+    throw error;
+  }
+}

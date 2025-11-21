@@ -1,7 +1,5 @@
 import { Tabs, TabsProps } from 'antd';
 import React from 'react';
-
-import './PillTabs.less';
 import clsx from 'clsx';
 
 /**

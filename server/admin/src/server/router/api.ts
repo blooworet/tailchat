@@ -179,6 +179,7 @@ router.use(
     allowedRegexFields: ['nickname'],
   })
 );
+
 router.delete('/messages/:id', auth(), async (req, res) => {
   try {
     const messageId = req.params.id;
@@ -187,6 +188,24 @@ router.delete('/messages/:id', auth(), async (req, res) => {
     });
 
     res.json({ id: messageId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: (err as any).message });
+  }
+});
+
+// 删除所有消息的API接口
+router.delete('/messages/all/confirm', auth(), async (req, res) => {
+  try {
+    // 调用消息服务删除所有消息（标记为管理员操作）
+    const result = await callBrokerAction<{ success: boolean; deletedCount: number }>('chat.message.deleteAllMessages', {
+      isAdminOperation: true
+    });
+    res.json({ 
+      success: true, 
+      message: '所有消息已删除',
+      deletedCount: result?.deletedCount || 0
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: (err as any).message });
@@ -372,5 +391,6 @@ router.use(
   raExpressMongoose(require('../../../../models/user/mail').default)
 );
 router.use('/p_discover', auth(), raExpressMongoose(discoverModel));
+
 
 export { router as apiRouter };

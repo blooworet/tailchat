@@ -1,40 +1,21 @@
-import {
-  createFastFormSchema,
-  fieldSchema,
-  ModalWrapper,
-  postRequest,
-  showToasts,
-  showErrorToasts,
-} from '@capital/common';
-import { WebFastForm } from '@capital/component';
-import React from 'react';
+import { ModalWrapper, showToasts, showErrorToasts, emitGlobalSocketEvent } from '@capital/common';
+import { Form, Input, Button, Space } from 'antd';
+import React, { useState } from 'react';
 import { Translate } from '../translate';
-
-const schema = createFastFormSchema({
-  appName: fieldSchema
-    .string()
-    .required(Translate.appNameCannotBeEmpty)
-    .max(20, Translate.appNameTooLong),
-  appDesc: fieldSchema.string(),
-});
-
-const fields = [
-  { type: 'text', name: 'appName', label: Translate.app.appName },
-  {
-    type: 'textarea',
-    name: 'appDesc',
-    label: Translate.app.appDesc,
-  },
-];
 
 interface CreateOpenAppProps {
   onSuccess?: () => void;
 }
+
 export const CreateOpenApp: React.FC<CreateOpenAppProps> = React.memo(
   (props) => {
+    const [form] = Form.useForm();
+    const [submitting, setSubmitting] = useState(false);
+
     const handleSubmit = async (values: any) => {
       try {
-        await postRequest('/openapi/app/create', {
+        setSubmitting(true);
+        await emitGlobalSocketEvent('openapi.app.create', {
           ...values,
           appIcon: '',
         });
@@ -43,12 +24,52 @@ export const CreateOpenApp: React.FC<CreateOpenAppProps> = React.memo(
         props.onSuccess?.();
       } catch (e) {
         showErrorToasts(e);
+      } finally {
+        setSubmitting(false);
       }
     };
 
     return (
       <ModalWrapper title={Translate.createApplication}>
-        <WebFastForm schema={schema} fields={fields} onSubmit={handleSubmit} />
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          autoComplete="off"
+        >
+          <Form.Item
+            label={Translate.app.appName}
+            name="appName"
+            rules={[
+              { required: true, message: Translate.appNameCannotBeEmpty },
+              { max: 20, message: Translate.appNameTooLong },
+            ]}
+          >
+            <Input placeholder={Translate.enterAppName} />
+          </Form.Item>
+
+          <Form.Item
+            label={Translate.app.appDesc}
+            name="appDesc"
+            rules={[
+              { required: true, message: Translate.appDescCannotBeEmpty },
+            ]}
+          >
+            <Input.TextArea placeholder={Translate.enterAppDesc} rows={3} />
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={submitting}
+              >
+                {Translate.createApplication}
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
       </ModalWrapper>
     );
   }

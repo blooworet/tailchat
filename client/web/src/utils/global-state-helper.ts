@@ -51,7 +51,8 @@ export async function emitGlobalSocketEvent(
   eventData?: unknown
 ): Promise<unknown> {
   if (!_socket) {
-    throw new Error('socket not inited');
+    console.warn('[emitGlobalSocketEvent] Socket未初始化');
+    return null;
   }
 
   const res = await _socket.request(eventName, eventData);

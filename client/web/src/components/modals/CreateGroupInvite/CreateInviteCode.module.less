@@ -1,8 +1,8 @@
 .createInviteBtn {
   display: flex;
-  :global {
-    .ant-btn:not(.ant-dropdown-trigger) {
-      flex: 1;
-    }
+  
+  /* 使用嵌套选择器提高特异性 */
+  :global(.ant-btn:not(.ant-dropdown-trigger)) {
+    flex: 1;
   }
 }

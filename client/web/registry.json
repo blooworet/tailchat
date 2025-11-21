@@ -106,30 +106,6 @@
     "requireRestart": false
   },
   {
-    "label": "Genshin Theme",
-    "label.zh-CN": "原神主题",
-    "name": "com.msgbyte.theme.genshin",
-    "url": "/plugins/com.msgbyte.theme.genshin/index.js",
-    "icon": "/plugins/com.msgbyte.theme.genshin/assets/icon.jpg",
-    "version": "0.0.0",
-    "author": "msgbyte",
-    "description": "Genshin Theme",
-    "description.zh-CN": "原神主题",
-    "documentUrl": "/plugins/com.msgbyte.theme.genshin/README.md",
-    "requireRestart": false
-  },
-  {
-    "label": "Hatsune Miku Theme",
-    "label.zh-CN": "Miku初音未来主题",
-    "name": "com.msgbyte.theme.miku",
-    "url": "/plugins/com.msgbyte.theme.miku/index.js",
-    "version": "0.0.0",
-    "author": "msgbyte",
-    "description": "Hatsune Miku theme, supports light and dark colors",
-    "description.zh-CN": "初音未来主题，支持亮色与暗色",
-    "requireRestart": false
-  },
-  {
     "label": "Tool frog!",
     "label.zh-CN": "工具哇！",
     "name": "com.msgbyte.toolwa",

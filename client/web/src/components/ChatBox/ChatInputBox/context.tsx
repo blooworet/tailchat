@@ -37,7 +37,14 @@ ChatInputMentionsContext.displayName = 'ChatInputMentionsContext';
 export const ChatInputMentionsContextProvider: React.FC<ChatInputMentionsContextProps> =
   React.memo((props) => {
     return (
-      <ChatInputMentionsContext.Provider value={useShallowObject({ ...props })}>
+      <ChatInputMentionsContext.Provider 
+        value={useShallowObject({
+          users: props.users,
+          panels: props.panels,
+          placeholder: props.placeholder,
+          disabled: props.disabled,
+        })}
+      >
         {props.children}
       </ChatInputMentionsContext.Provider>
     );

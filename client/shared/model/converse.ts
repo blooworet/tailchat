@@ -1,4 +1,4 @@
-import { request } from '../api/request';
+import { getGlobalSocket } from '../api/socket';
 import {
   createAutoMergedRequest,
   createAutoSplitRequest,
@@ -27,11 +27,9 @@ export interface ChatConverseInfo {
 export async function createDMConverse(
   memberIds: string[]
 ): Promise<ChatConverseInfo> {
-  const { data } = await request.post('/api/chat/converse/createDMConverse', {
-    memberIds,
-  });
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<ChatConverseInfo>('chat.converse.createDMConverse', { memberIds });
 }
 
 /**
@@ -41,15 +39,9 @@ export async function appendDMConverseMembers(
   converseId: string,
   memberIds: string[]
 ) {
-  const { data } = await request.post(
-    '/api/chat/converse/appendDMConverseMembers',
-    {
-      converseId,
-      memberIds,
-    }
-  );
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  return await socket.request<any>('chat.converse.appendDMConverseMembers', { converseId, memberIds });
 }
 
 /**
@@ -59,13 +51,13 @@ export async function appendDMConverseMembers(
 export async function fetchConverseInfo(
   converseId: string
 ): Promise<ChatConverseInfo> {
-  const { data } = await request.get('/api/chat/converse/findConverseInfo', {
-    params: {
-      converseId,
-    },
-  });
-
-  return data;
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  
+  // 调试信息 - 临时移除
+  // console.debug('[fetchConverseInfo] Socket status:', ...);
+  
+  return await socket.request<ChatConverseInfo>('chat.converse.findConverseInfo', { converseId });
 }
 
 /**
@@ -74,7 +66,9 @@ export async function fetchConverseInfo(
  * @param lastMessageId 最后一条消息ID
  */
 export async function updateAck(converseId: string, lastMessageId: string) {
-  await request.post('/api/chat/ack/update', { converseId, lastMessageId });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  await socket.request('chat.ack.update', { converseId, lastMessageId });
 }
 
 interface AckInfo {
@@ -87,8 +81,9 @@ interface AckInfo {
  * 获取用户存储在远程的会话信息
  */
 export async function fetchUserAck(): Promise<AckInfo[]> {
-  const { data } = await request.get('/api/chat/ack/all');
-
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  const data = await socket.request<any[]>('chat.ack.all');
   if (!Array.isArray(data)) {
     return [];
   }
@@ -102,10 +97,25 @@ export async function fetchUserAck(): Promise<AckInfo[]> {
 export async function fetchUserAckList(
   converseIds: string[]
 ): Promise<(AckInfo | null)[]> {
-  const { data } = await request.post('/api/chat/ack/list', {
-    converseIds,
-  });
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  const data = await socket.request<(AckInfo | null)[]>('chat.ack.list', { converseIds });
+  if (!Array.isArray(data)) {
+    return [];
+  }
 
+  return data;
+}
+
+/**
+ * 获取某个会话内其他成员的已读信息
+ */
+export async function fetchConverseMemberAcks(
+  converseId: string
+): Promise<AckInfo[]> {
+  const socket = getGlobalSocket();
+  if (!socket) throw new Error('Socket not ready');
+  const data = await socket.request<AckInfo[]>('chat.ack.converse', { converseId });
   if (!Array.isArray(data)) {
     return [];
   }

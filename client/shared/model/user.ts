@@ -1,4 +1,4 @@
-import { request } from '../api/request';
+import { getOrCreateSocket, getGlobalSocket, createSocket } from '../api/socket';
 import { buildCachedRequest } from '../cache/utils';
 import { sharedEvent } from '../event';
 import { SYSTEM_USERID } from '../utils/consts';
@@ -50,6 +50,7 @@ export interface UserSettings {
 
 export function pickUserBaseInfo(userInfo: UserLoginInfo): UserBaseInfo {
   return _pick(userInfo, [
+    'username',
     '_id',
     'email',
     'nickname',
@@ -98,21 +99,20 @@ export interface UserDMList {
 }
 
 /**
- * 邮箱登录
- * @param email 邮箱
+ * 用户名登录
+ * @param username 用户名
  * @param password 密码
  */
-export async function loginWithEmail(
-  email: string,
+export async function loginWithUsername(
+  username: string,
   password: string
 ): Promise<UserLoginInfo> {
-  const { data } = await request.post('/api/user/login', {
-    email,
+  const socket = await createSocket(undefined, { allowGuest: true });
+  const data = await socket.request<UserLoginInfo>('user.login', {
+    username,
     password,
   });
-
   sharedEvent.emit('loginSuccess', pickUserBaseInfo(data));
-
   return data;
 }
 
@@ -121,12 +121,9 @@ export async function loginWithEmail(
  * @param token JWT令牌
  */
 export async function loginWithToken(token: string): Promise<UserLoginInfo> {
-  const { data } = await request.post('/api/user/resolveToken', {
-    token,
-  });
-
+  const socket = await getOrCreateSocket(token);
+  const data = await socket.request<UserLoginInfo>('user.resolveToken', { token });
   sharedEvent.emit('loginSuccess', pickUserBaseInfo(data));
-
   return data;
 }
 
@@ -135,11 +132,8 @@ export async function loginWithToken(token: string): Promise<UserLoginInfo> {
  * @param email 邮箱
  */
 export async function verifyEmail(email: string): Promise<UserLoginInfo> {
-  const { data } = await request.post('/api/user/verifyEmail', {
-    email,
-  });
-
-  return data;
+  const socket = await createSocket(undefined, { allowGuest: true });
+  return await socket.request<UserLoginInfo>('user.verifyEmail', { email });
 }
 
 /**
@@ -149,11 +143,8 @@ export async function verifyEmail(email: string): Promise<UserLoginInfo> {
 export async function verifyEmailWithOTP(
   emailOTP: string
 ): Promise<UserLoginInfo> {
-  const { data } = await request.post('/api/user/verifyEmailWithOTP', {
-    emailOTP,
-  });
-
-  return data;
+  const socket = await createSocket(undefined, { allowGuest: true });
+  return await socket.request<UserLoginInfo>('user.verifyEmailWithOTP', { emailOTP });
 }
 
 /**
@@ -165,21 +156,23 @@ export async function registerWithEmail({
   email,
   password,
   nickname,
+  username,
   emailOTP,
 }: {
   email: string;
   password: string;
   nickname?: string;
+  username?: string;
   emailOTP?: string;
 }): Promise<UserLoginInfo> {
-  const { data } = await request.post('/api/user/register', {
+  const socket = await createSocket(undefined, { allowGuest: true });
+  return await socket.request<UserLoginInfo>('user.register', {
     email,
     nickname,
+    username,
     password,
     emailOTP,
   });
-
-  return data;
 }
 
 /**
@@ -189,10 +182,8 @@ export async function modifyUserPassword(
   oldPassword: string,
   newPassword: string
 ): Promise<void> {
-  await request.post('/api/user/modifyPassword', {
-    oldPassword,
-    newPassword,
-  });
+  const socket = await getOrCreateSocket();
+  await socket.request('user.modifyPassword', { oldPassword, newPassword });
 }
 
 /**
@@ -200,9 +191,8 @@ export async function modifyUserPassword(
  * @param email 邮箱
  */
 export async function forgetPassword(email: string) {
-  await request.post('/api/user/forgetPassword', {
-    email,
-  });
+  const socket = await createSocket(undefined, { allowGuest: true });
+  await socket.request('user.forgetPassword', { email });
 }
 
 /**
@@ -214,11 +204,8 @@ export async function resetPassword(
   password: string,
   otp: string
 ) {
-  await request.post('/api/user/resetPassword', {
-    email,
-    password,
-    otp,
-  });
+  const socket = await createSocket(undefined, { allowGuest: true });
+  await socket.request('user.resetPassword', { email, password, otp });
 }
 
 /**
@@ -228,11 +215,8 @@ export async function resetPassword(
 export async function createTemporaryUser(
   nickname: string
 ): Promise<UserLoginInfo> {
-  const { data } = await request.post('/api/user/createTemporaryUser', {
-    nickname,
-  });
-
-  return data;
+  const socket = await createSocket(undefined, { allowGuest: true });
+  return await socket.request<UserLoginInfo>('user.createTemporaryUser', { nickname });
 }
 
 /**
@@ -244,14 +228,13 @@ export async function claimTemporaryUser(
   password: string,
   emailOTP?: string
 ): Promise<UserLoginInfo> {
-  const { data } = await request.post('/api/user/claimTemporaryUser', {
+  const socket = await createSocket(undefined, { allowGuest: true });
+  return await socket.request<UserLoginInfo>('user.claimTemporaryUser', {
     userId,
     email,
     password,
     emailOTP,
   });
-
-  return data;
 }
 
 /**
@@ -261,22 +244,23 @@ export async function claimTemporaryUser(
 export async function searchUserWithUniqueName(
   uniqueName: string
 ): Promise<UserBaseInfo> {
-  const { data } = await request.post('/api/user/searchUserWithUniqueName', {
-    uniqueName,
-  });
+  throw new Error('Deprecated API: 请按用户名搜索（不含#）');
+}
 
-  return data;
+/**
+ * 新：按 username 精确查找（大小写不敏感）
+ */
+export async function findUserByUsernameCI(username: string): Promise<UserBaseInfo | null> {
+  const socket = await getOrCreateSocket();
+  return await socket.request<UserBaseInfo | null>('user.findUserByUsernameCI', { username });
 }
 
 const _fetchUserInfo = createAutoMergedRequest<string, UserBaseInfo>(
   createAutoSplitRequest(
     async (userIds) => {
       // 这里用post是为了防止一次性获取的userId过多超过url限制
-      const { data } = await request.post('/api/user/getUserInfoList', {
-        userIds,
-      });
-
-      return data;
+      const socket = await getOrCreateSocket();
+      return await socket.request<UserBaseInfo[]>('user.getUserInfoList', { userIds });
     },
     'serial',
     1000
@@ -286,19 +270,36 @@ const _fetchUserInfo = createAutoMergedRequest<string, UserBaseInfo>(
  * 获取用户基本信息
  * @param userId 用户ID
  */
-export async function fetchUserInfo(userId: string): Promise<UserBaseInfo> {
-  if (
-    builtinUserInfo[userId] &&
-    typeof builtinUserInfo[userId] === 'function'
-  ) {
-    return builtinUserInfo[userId]();
+export async function fetchUserInfo(userId: string | { _id?: string; id?: string; userId?: string } | any): Promise<UserBaseInfo> {
+  const normalizeUserId = (raw: any): string => {
+    if (typeof raw === 'string' || typeof raw === 'number') return String(raw);
+    if (raw && typeof raw === 'object') {
+      if (typeof raw._id === 'string') return raw._id;
+      if (typeof raw.id === 'string') return raw.id;
+      if (typeof raw.userId === 'string') return raw.userId;
+      // 兜底：在一层对象里寻找第一个疑似 ObjectId 的字符串
+      try {
+        for (const k of Object.keys(raw)) {
+          const v: any = (raw as any)[k];
+          if (typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v)) return v;
+        }
+      } catch {}
+    }
+    return '';
+  };
+
+  const id = normalizeUserId(userId);
+
+  if (builtinUserInfo[id] && typeof builtinUserInfo[id] === 'function') {
+    return builtinUserInfo[id]();
   }
 
-  if (!isObjectId(userId)) {
-    throw new Error(`Invalid userId: ${userId}`);
+  if (!isObjectId(id)) {
+    // 返回占位用户，避免页面报错；同时不触发后端查询
+    return builtinUserInfo['']();
   }
 
-  const userInfo = await _fetchUserInfo(userId);
+  const userInfo = await _fetchUserInfo(id);
 
   return userInfo;
 }
@@ -308,11 +309,9 @@ const _fetchUserOnlineStatus = createAutoMergedRequest<string[], boolean[]>(
     async (userIdsList) => {
       const uniqList = _uniq(_flatten(userIdsList));
       // 这里用post是为了防止一次性获取的userId过多超过url限制
-      const { data } = await request.post('/api/gateway/checkUserOnline', {
-        userIds: uniqList,
-      });
-
-      const map = _zipObject<boolean>(uniqList, data);
+      const socket = await getOrCreateSocket();
+      const data = await socket.request<boolean[]>('gateway.checkUserOnline', { userIds: uniqList });
+      const map = _zipObject<boolean>(uniqList, data as any);
 
       // 将请求结果根据传输来源重新分组
       return userIdsList.map((userIds) =>
@@ -328,9 +327,18 @@ const _fetchUserOnlineStatus = createAutoMergedRequest<string[], boolean[]>(
  * 获取用户在线状态
  */
 export async function getUserOnlineStatus(
-  userIds: string[]
+  userIds: Array<string | { _id?: string; id?: string; userId?: string } | any>
 ): Promise<boolean[]> {
-  return _fetchUserOnlineStatus(userIds);
+  const ids = userIds.map((raw) => {
+    if (typeof raw === 'string' || typeof raw === 'number') return String(raw);
+    if (raw && typeof raw === 'object') {
+      if (typeof raw._id === 'string') return raw._id;
+      if (typeof raw.id === 'string') return raw.id;
+      if (typeof raw.userId === 'string') return raw.userId;
+    }
+    return '';
+  });
+  return _fetchUserOnlineStatus(ids);
 }
 
 /**
@@ -340,14 +348,8 @@ export async function getUserOnlineStatus(
 export async function appendUserDMConverse(
   converseId: string
 ): Promise<UserDMList> {
-  const { data } = await request.post<UserDMList>(
-    '/api/user/dmlist/addConverse',
-    {
-      converseId,
-    }
-  );
-
-  return data;
+  const socket = await getOrCreateSocket();
+  return await socket.request<UserDMList>('user.dmlist.addConverse', { converseId });
 }
 
 /**
@@ -356,14 +358,8 @@ export async function appendUserDMConverse(
 export async function removeUserDMConverse(
   converseId: string
 ): Promise<UserDMList> {
-  const { data } = await request.post<UserDMList>(
-    '/api/user/dmlist/removeConverse',
-    {
-      converseId,
-    }
-  );
-
-  return data;
+  const socket = await getOrCreateSocket();
+  return await socket.request<UserDMList>('user.dmlist.removeConverse', { converseId });
 }
 
 /**
@@ -376,34 +372,26 @@ export async function modifyUserField(
   fieldName: AllowedModifyField,
   fieldValue: unknown
 ): Promise<UserBaseInfo> {
-  const { data } = await request.post('/api/user/updateUserField', {
-    fieldName,
-    fieldValue,
-  });
-
-  return data;
+  const socket = await getOrCreateSocket();
+  return await socket.request<UserBaseInfo>('user.updateUserField', { fieldName, fieldValue });
 }
 
 export async function modifyUserExtra(
   fieldName: string,
   fieldValue: unknown
 ): Promise<UserBaseInfo> {
-  const { data } = await request.post('/api/user/updateUserExtra', {
-    fieldName,
-    fieldValue,
-  });
-
-  return data;
+  const socket = await getOrCreateSocket();
+  return await socket.request<UserBaseInfo>('user.updateUserExtra', { fieldName, fieldValue });
 }
 
 /**
  * 获取用户设置
  */
 export async function getUserSettings(): Promise<UserSettings> {
-  const { data } = await request.get('/api/user/getUserSettings');
-
+  const socket = await getOrCreateSocket();
+  try { await (socket as any).waitReady?.(); } catch {}
+  const data = await socket.request<UserSettings>('user.getUserSettings', {});
   sharedEvent.emit('userSettingsUpdate', data);
-
   return data;
 }
 
@@ -413,11 +401,8 @@ export async function getUserSettings(): Promise<UserSettings> {
 export async function setUserSettings(
   settings: UserSettings
 ): Promise<UserSettings> {
-  const { data } = await request.post('/api/user/setUserSettings', {
-    settings,
-  });
-
-  return data;
+  const socket = await getOrCreateSocket();
+  return await socket.request<UserSettings>('user.setUserSettings', { settings });
 }
 
 /**
@@ -426,10 +411,7 @@ export async function setUserSettings(
 export const checkTokenValid = buildCachedRequest(
   'tokenValid',
   async (token: string): Promise<boolean> => {
-    const { data } = await request.post<boolean>('/api/user/checkTokenValid', {
-      token,
-    });
-
-    return data;
+    const socket = await getOrCreateSocket();
+    return await socket.request<boolean>('user.checkTokenValid', { token });
   }
 );

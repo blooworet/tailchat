@@ -1,7 +1,7 @@
 import { createTestServiceBroker } from '../../utils';
 import UserDMListService from '../../../services/core/user/dmlist.service';
 import { Types } from 'mongoose';
-import type { UserDMList } from '../../../models/user/dmList';
+import type { UserDMList } from '../../../models/user/dmlist';
 
 describe('Test "dmlist" service', () => {
   const { broker, service, insertTestData } =

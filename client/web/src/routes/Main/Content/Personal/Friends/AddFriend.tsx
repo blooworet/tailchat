@@ -1,12 +1,10 @@
-import { Highlight } from '@/components/Highlight';
-import { Button, Divider, Typography } from 'antd';
+import { Button, Divider, Typography, Tag } from 'antd';
 import {
   addFriendRequest,
-  searchUserWithUniqueName,
+  findUserByUsernameCI,
   showErrorToasts,
   showToasts,
   t,
-  Trans,
   useAppSelector,
   useAsyncFn,
   UserBaseInfo,
@@ -52,11 +50,14 @@ const SearchFriendResult: React.FC<{
             name={result.nickname}
             src={result.avatar}
           />
-          <div className="text-lg">
-            {result.nickname}
-            <span className="text-opacity-60 text-sm text-white">
-              #{result.discriminator}
-            </span>
+          <div className="text-lg flex items-center gap-2 flex-wrap">
+            <span>{result.nickname}</span>
+            {result.username ? (
+              <span className="text-opacity-60 text-sm text-white">@{result.username}</span>
+            ) : null}
+            {result?.extra && (result as any).extra?.flag ? (
+              <Tag color="gold" className="align-middle">{(result as any).extra.flag}</Tag>
+            ) : null}
           </div>
         </div>
 
@@ -76,7 +77,7 @@ SearchFriendResult.displayName = 'SearchFriendResult';
 
 const SelfIdentify: React.FC = React.memo(() => {
   const userInfo = useAppSelector((state) => state.user.info);
-  const uniqueName = `${userInfo?.nickname}#${userInfo?.discriminator}`;
+  const display = userInfo?.username ? `@${userInfo.username}` : '';
 
   return (
     <div>
@@ -84,9 +85,11 @@ const SelfIdentify: React.FC = React.memo(() => {
 
       <div className="rounded-md border border-black border-opacity-30 px-4 py-3 bg-black bg-opacity-10 text-center">
         <div>{t('您的个人唯一标识')}</div>
-        <Typography.Title level={4} copyable={true} className="select-text">
-          {uniqueName}
-        </Typography.Title>
+        {display ? (
+          <Typography.Title level={4} copyable={true} className="select-text">
+            {display}
+          </Typography.Title>
+        ) : null}
       </div>
     </div>
   );
@@ -94,11 +97,11 @@ const SelfIdentify: React.FC = React.memo(() => {
 SelfIdentify.displayName = 'SelfIdentify';
 
 export const AddFriend: React.FC = React.memo(() => {
-  const [uniqueName, setUniqueName] = useState('');
+  const [username, setUsername] = useState('');
   const [{ loading, value }, searchUser] = useAsyncFn(async () => {
     // 搜索用户
     try {
-      const data = await searchUserWithUniqueName(uniqueName);
+      const data = await findUserByUsernameCI(username);
 
       if (data === null) {
         showToasts(t('没有找到该用户'), 'warning');
@@ -108,32 +111,28 @@ export const AddFriend: React.FC = React.memo(() => {
     } catch (err) {
       showErrorToasts(err);
     }
-  }, [uniqueName]);
+  }, [username]);
 
   return (
     <div className="px-8 py-2">
       <div className="text-lg my-2">{t('添加好友')}</div>
-      <div className="my-1">
-        <Trans>
-          您可以使用完整的 <Highlight>用户昵称#标识</Highlight> 来添加好友
-        </Trans>
-      </div>
+      <div className="my-1">{t('您可以直接输入对方的用户名以添加好友')}</div>
 
       <div className="px-4 py-2 my-3 flex border border-black border-opacity-30 rounded items-center bg-black bg-opacity-10 mobile:flex-col">
         <input
           className="bg-transparent flex-1 text-base leading-9 outline-none mobile:w-full mobile:mb-1"
-          placeholder={t('用户昵称#0000')}
-          onChange={(e) => setUniqueName(e.target.value)}
+          placeholder={t('用户名（5–32，字母数字与下划线）')}
+          onChange={(e) => setUsername(e.target.value)}
         />
 
         <Button
           type="primary"
           className="bg-indigo-600 disabled:opacity-80 border-none mobile:w-full"
-          disabled={uniqueName === ''}
+          disabled={username === ''}
           loading={loading}
           onClick={searchUser}
         >
-          {t('查找好友')}
+          {t('按用户名查找')}
         </Button>
       </div>
 

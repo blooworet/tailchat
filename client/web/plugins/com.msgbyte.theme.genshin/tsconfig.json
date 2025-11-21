@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "jsx": "react",
-    "paths": {
-      "@capital/*": ["../../src/plugin/*"],
-    }
-  }
-}

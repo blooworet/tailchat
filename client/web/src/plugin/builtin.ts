@@ -154,3 +154,5 @@ export const builtinPlugins: PluginManifest[] = _compact([
   //   requireRestart: false,
   // },
 ]);
+
+// 音频消息渲染已集成到BBCode插件的CardTag中，无需额外注册

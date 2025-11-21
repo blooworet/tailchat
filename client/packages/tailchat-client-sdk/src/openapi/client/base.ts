@@ -6,15 +6,22 @@ export class TailchatBaseClient {
   jwt: string | null = null;
   userId: string | null = null;
   loginP: Promise<void>;
+  private _transformOutgoingMessage?: (payload: {
+    converseId: string;
+    groupId?: string;
+    content: string;
+    plain?: string;
+    meta?: object;
+  }) => Promise<any> | any;
 
   constructor(
     public url: string,
-    public appId: string,
-    public appSecret: string
+    public appSecret: string,
+    public appId: string = '' // 保留参数以兼容旧版本，但默认为空字符串
   ) {
-    if (!url || !appId || !appSecret) {
+    if (!url || !appSecret) {
       throw new Error(
-        'Require params: apiUrl, appId, appSecret. You can set it with env'
+        'Require params: apiUrl, appSecret. You can set it with env'
       );
     }
 
@@ -40,12 +47,9 @@ export class TailchatBaseClient {
     try {
       console.log('Login...');
       const { data } = await this.request.post('/api/openapi/bot/login', {
-        appId: this.appId,
-        token: this.getBotToken(),
+        token: this.appSecret, // 直接使用appSecret作为token
       });
 
-      // NOTICE: 注意，有30天过期时间，需要定期重新登录以换取新的token
-      // 这里先不换
       this.jwt = data.data?.jwt;
       this.userId = data.data?.userId;
 
@@ -109,10 +113,8 @@ export class TailchatBaseClient {
   }
 
   getBotToken() {
-    return crypto
-      .createHash('md5')
-      .update(this.appId + this.appSecret)
-      .digest('hex');
+    // 为了向后兼容，保留此方法但直接返回appSecret
+    return this.appSecret;
   }
 
   /**
@@ -125,7 +127,10 @@ export class TailchatBaseClient {
     plain?: string;
     meta?: object;
   }) {
-    return this.call('chat.message.sendMessage', payload);
+    const next = this._transformOutgoingMessage
+      ? await this._transformOutgoingMessage(payload)
+      : payload;
+    return this.call('chat.message.sendMessage', next);
   }
 
   /**
@@ -160,3 +165,28 @@ export class TailchatBaseClient {
     });
   }
 }
+
+export interface TailchatMessageTransformer {
+  (payload: {
+    converseId: string;
+    groupId?: string;
+    content: string;
+    plain?: string;
+    meta?: object;
+  }): Promise<any> | any;
+}
+
+export interface TailchatBaseClient {
+  /**
+   * 设置消息发送前的可选转换器（例如加密）
+   */
+  setMessageTransformer(transformer?: TailchatMessageTransformer): void;
+}
+
+// 使用声明合并为类添加方法实现
+(TailchatBaseClient as any).prototype.setMessageTransformer = function (
+  this: any,
+  transformer?: (payload: any) => any
+) {
+  this._transformOutgoingMessage = transformer;
+};

@@ -256,8 +256,8 @@ class AccessToken2 {
       new ByteBuf().putString(signature).pack(),
       signing_info,
     ]);
-    const compressed = zlib.deflateSync(content);
-    return `${getVersion()}${Buffer.from(compressed).toString('base64')}`;
+    const compressed = zlib.deflateSync(content as any);
+    return `${getVersion()}${compressed.toString('base64')}`;
   }
 
   from_string(origin_token) {
@@ -270,7 +270,7 @@ class AccessToken2 {
       VERSION_LENGTH,
       origin_token.length
     );
-    const buffer = zlib.inflateSync(new Buffer(origin_content, 'base64'));
+    const buffer = zlib.inflateSync(Buffer.from(origin_content, 'base64') as any);
     const bufferReader = new ReadByteBuf(buffer);
 
     const signature = bufferReader.getString();

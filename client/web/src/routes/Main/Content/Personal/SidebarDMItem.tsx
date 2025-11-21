@@ -32,24 +32,26 @@ export const SidebarDMItem: React.FC<SidebarDMItemProps> = React.memo(
         return;
       }
 
-      const userInfos = await Promise.all(
-        _without<string>(converse.members, userId).map((memberUserId) =>
-          getCachedUserInfo(memberUserId)
+      const userInfos = (
+        await Promise.all(
+          _without<string>(converse.members, userId).map((memberUserId) =>
+            getCachedUserInfo(memberUserId)
+          )
         )
-      );
+      ).filter((u): u is any => !!u && !!u._id);
 
-      return (
-        <CombinedAvatar
-          items={userInfos.map((user) => ({
-            name: user.nickname,
-            src: user.avatar,
-          }))}
-        />
-      );
+      const items = userInfos.map((user) => ({
+        name: user?.nickname || '已删除用户',
+        src: user?.avatar || '',
+      }));
+
+      return <CombinedAvatar items={items.length > 0 ? items : [{ name: '已删除用户', src: '' }]} />;
     }, [converse.members, userId]);
 
     const [, handleRemove] = useAsyncRequest(async () => {
       dispatch(chatActions.removeConverse({ converseId }));
+      // 同步更新本地“私信列表”ids，确保侧栏即时隐藏
+      dispatch(chatActions.removeDMConverseId(converseId));
       await model.user.removeUserDMConverse(converseId);
     }, [converseId]);
 

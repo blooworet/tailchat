@@ -1,7 +1,9 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import _set from 'lodash/set';
 import type { UserLoginInfo } from '../../model/user';
 import type { FriendRequest } from '../../model/friend';
+import type { GroupFriendInvite } from '../../model/group-friend-invite';
 
 export interface FriendInfo {
   id: string;
@@ -12,12 +14,14 @@ export interface UserState {
   info: UserLoginInfo | null;
   friends: FriendInfo[]; // 好友的id列表
   friendRequests: FriendRequest[];
+  groupInvites: GroupFriendInvite[]; // 群组好友邀请列表
 }
 
 const initialState: UserState = {
   info: null,
   friends: [],
   friendRequests: [],
+  groupInvites: [],
 };
 
 const userSlice = createSlice({
@@ -56,11 +60,11 @@ const userSlice = createSlice({
       state.friendRequests = action.payload;
     },
     appendFriend(state, action: PayloadAction<FriendInfo>) {
-      if (state.friends.some((id) => id === action.payload)) {
+      const incoming = action.payload;
+      if (state.friends.some((f) => f.id === incoming.id)) {
         return;
       }
-
-      state.friends.push(action.payload);
+      state.friends.push(incoming);
     },
     removeFriend(state, action: PayloadAction<string>) {
       const friendId = action.payload;
@@ -92,6 +96,34 @@ const userSlice = createSlice({
       const target = state.friends.find((f) => f.id === friendId);
       if (target) {
         target.nickname = nickname;
+      }
+    },
+    setGroupInvites(state, action: PayloadAction<GroupFriendInvite[]>) {
+      state.groupInvites = action.payload;
+    },
+    appendGroupInvite(state, action: PayloadAction<GroupFriendInvite>) {
+      if (state.groupInvites.some(({ _id }) => _id === action.payload._id)) {
+        return;
+      }
+      state.groupInvites.push(action.payload);
+    },
+    removeGroupInvite(state, action: PayloadAction<string>) {
+      const index = state.groupInvites.findIndex(
+        ({ _id }) => _id === action.payload
+      );
+      if (index >= 0) {
+        state.groupInvites.splice(index, 1);
+      }
+    },
+    updateGroupInviteStatus(
+      state,
+      action: PayloadAction<{ inviteId: string; status: string }>
+    ) {
+      const { inviteId, status } = action.payload;
+      const invite = state.groupInvites.find(({ _id }) => _id === inviteId);
+      if (invite) {
+        invite.status = status as any;
+        invite.handledAt = new Date().toISOString();
       }
     },
   },

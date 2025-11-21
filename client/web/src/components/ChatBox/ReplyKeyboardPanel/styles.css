@@ -1,0 +1,32 @@
+.tc-rk-panel{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin:6px 0;
+  /* 限制整体高度，避免在小视窗中挤压聊天区域 */
+  max-height:30vh;
+  overflow-y:auto;
+}
+.tc-rk-placeholder{font-size:12px;opacity:.7;padding:0 2px}
+.tc-rk-grid{display:flex;flex-direction:column;gap:6px}
+.tc-rk-row{
+  display:flex;
+  gap:6px;
+  justify-content:center;
+  /* 一行容不下时自动换行，避免横向撑破 */
+  flex-wrap:wrap;
+}
+.tc-rk-btn{
+  padding:var(--rk-pad-y,8px) var(--rk-pad-x,10px);
+  border-radius:var(--rk-radius,var(--tc-radius-md,8px));
+  border:1px solid var(--rk-border,rgba(0,0,0,.08));
+  background:var(--rk-bg,rgba(0,0,0,.04));
+  box-shadow:var(--rk-shadow,var(--tc-shadow-sm,0 1px 2px rgba(0,0,0,.05)));
+  color:inherit;
+  white-space:nowrap;
+  /* 自适应父容器宽度，避免按钮撑出网格 */
+  max-width:100%;
+  box-sizing:border-box;
+}
+.tc-rk-btn:disabled{opacity:.6;cursor:not-allowed}
+.rk-resize .tc-rk-btn{padding:var(--rk-pad-y-resize,10px) var(--rk-pad-x-resize,12px);flex:1 1 0}

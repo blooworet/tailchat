@@ -34,12 +34,22 @@ export enum CacheKey {
  * 获取缓存的用户信息
  */
 export async function getCachedUserInfo(
-  userId: string,
+  userId: string | { _id?: string; id?: string; userId?: string } | any,
   refetch = false
 ): Promise<UserBaseInfo> {
+  const normalizeUserId = (raw: any): string => {
+    if (typeof raw === 'string' || typeof raw === 'number') return String(raw);
+    if (raw && typeof raw === 'object') {
+      if (typeof raw._id === 'string') return raw._id;
+      if (typeof raw.id === 'string') return raw.id;
+      if (typeof raw.userId === 'string') return raw.userId;
+    }
+    return '';
+  };
+  const id = normalizeUserId(userId);
   const data = await queryClient.fetchQuery(
-    [CacheKey.user, userId],
-    () => fetchUserInfo(userId),
+    [CacheKey.user, id],
+    () => fetchUserInfo(id),
     {
       staleTime: refetch ? 0 : 2 * 60 * 60 * 1000, // 缓存2小时
     }
@@ -54,6 +64,9 @@ export async function getCachedUserInfo(
 export async function getCachedConverseInfo(
   converseId: string
 ): Promise<ChatConverseInfo> {
+  if (!(typeof converseId === 'string' && converseId.length > 0)) {
+    throw new Error('Invalid converseId');
+  }
   const data = await queryClient.fetchQuery(
     [CacheKey.converse, converseId],
     () => fetchConverseInfo(converseId)

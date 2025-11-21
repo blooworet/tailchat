@@ -2,7 +2,10 @@
   @apply text-gray-700 dark:text-gray-100 max-h-full;
 
   .ant-tabs-nav {
-    @apply px-2 py-3 m-0 text-base;
+    @apply px-2;
+    @apply py-3;
+    @apply m-0;
+    @apply text-base;
 
     &::before {
       @apply border-0;
@@ -18,7 +21,8 @@
         &.ant-tabs-tab-active,
         &:hover,
         &:active {
-          @apply rounded bg-opacity-20;
+          @apply rounded;
+          @apply bg-opacity-20;
 
           .ant-tabs-tab-btn {
             @apply text-black dark:text-white;
@@ -26,13 +30,16 @@
         }
       }
 
-      &.ant-tabs-tab-disabled {
-        @apply text-opacity-50;
+  &.ant-tabs-tab-disabled {
+    @apply text-opacity-50;
 
-        &.ant-tabs-tab-active {
-          @apply text-red-500 rounded bg-opacity-20 bg-red-500;
-        }
-      }
+    &.ant-tabs-tab-active {
+      @apply text-red-500;
+      @apply rounded;
+      @apply bg-opacity-20;
+      @apply bg-red-500;
+    }
+  }
 
       .ant-tabs-tab-btn {
         color: inherit;

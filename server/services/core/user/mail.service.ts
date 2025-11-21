@@ -47,7 +47,7 @@ class MailService extends TcService {
     }>
   ) {
     if (!this.smtpServiceAvailable) {
-      throw new Error('SMTP 服务不可用');
+      throw new Error(ctx.meta.t('SMTP 服务不可用'));
     }
 
     const { to, subject, html } = ctx.params;

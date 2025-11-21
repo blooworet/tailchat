@@ -10,19 +10,21 @@ import { useAppSelector } from './useAppSelector';
 export function useDMConverseList(): ChatConverseState[] {
   const converses = useAppSelector((state) => state.chat.converses);
   const lastMessageMap = useAppSelector((state) => state.chat.lastMessageMap);
+  const dmConverseIds = useAppSelector((state) => state.chat.dmConverseIds);
 
   const filteredConverse = useMemo(
     () =>
       Object.entries(converses)
-        .filter(([, info]) =>
-          [ChatConverseType.DM, ChatConverseType.Multi].includes(info.type)
+        .filter(([id, info]) =>
+          [ChatConverseType.DM, ChatConverseType.Multi].includes(info.type) &&
+          dmConverseIds.includes(id)
         )
         .map(([, info]) => info),
-    [converses]
+    [converses, dmConverseIds]
   );
 
   return useMemo(() => {
-    return filteredConverse.sort((a, b) => {
+    return filteredConverse.sort((a: ChatConverseState, b: ChatConverseState) => {
       return (lastMessageMap[a._id] ?? '') < (lastMessageMap[b._id] ?? '')
         ? 1
         : -1;

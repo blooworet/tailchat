@@ -4,7 +4,8 @@
     "declaration": true,
     "target": "ES5",
     "lib": ["ES2015"],
-    "module": "CommonJS"
+    "module": "CommonJS",
+    "verbatimModuleSyntax": false
   },
   "include": ["src"]
 }

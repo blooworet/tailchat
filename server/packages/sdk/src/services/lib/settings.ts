@@ -44,7 +44,7 @@ export const config = {
   },
   apiUrl,
   staticUrl,
-  enableOpenapi: true, // 是否开始openapi
+  enableOpenapi: checkEnvTrusty(process.env.ENABLE_OPENAPI) ?? true, // 是否开放openapi
 
   emailVerification: checkEnvTrusty(process.env.EMAIL_VERIFY) || false, // 是否在注册后验证邮箱可用性
   smtp: {
@@ -74,6 +74,55 @@ export const config = {
     disablePluginStore: checkEnvTrusty(process.env.DISABLE_PLUGIN_STORE), // 是否禁用用户插件中心功能
     disableAddFriend: checkEnvTrusty(process.env.DISABLE_ADD_FRIEND), // 是否禁用用户添加好友功能
     disableTelemetry: checkEnvTrusty(process.env.DISABLE_TELEMETRY), // 是否禁用遥测
+    // 新特性开关：用户名唯一化与大小写不敏感匹配
+    usernameUniqueMode: checkEnvTrusty(process.env.FEATURE_USERNAME_UNIQUE_MODE),
+    // 内联动作签名验证开关
+    inlineActionRequireSignature: checkEnvTrusty(process.env.FEATURE_INLINE_ACTION_REQUIRE_SIGNATURE),
+    // TailProto 相关开关
+    tailprotoEnabled: checkEnvTrusty(process.env.TAILPROTO_ENABLED),
+    tailprotoRequired: checkEnvTrusty(process.env.TAILPROTO_REQUIRED),
+    tailprotoCipher: process.env.TAILPROTO_CIPHER || 'aes-gcm',
+    tailprotoRekeyIntervalMs: process.env.TAILPROTO_REKEY_INTERVAL_MS
+      ? Number(process.env.TAILPROTO_REKEY_INTERVAL_MS)
+      : 60 * 1000,
+    tailprotoRekeyAcceptOldMs: process.env.TAILPROTO_REKEY_ACCEPT_OLD_MS
+      ? Number(process.env.TAILPROTO_REKEY_ACCEPT_OLD_MS)
+      : 30 * 1000,
+    // Rekey 强制通知/截止与过期断线（增强开关）
+    tailprotoRekeyForceNotify: checkEnvTrusty(process.env.TAILPROTO_REKEY_FORCE_NOTIFY) ?? true,
+    tailprotoRekeyDeadlineMs: process.env.TAILPROTO_REKEY_DEADLINE_MS
+      ? Number(process.env.TAILPROTO_REKEY_DEADLINE_MS)
+      : 30 * 1000,
+    tailprotoRekeyDisconnectOnExpired: checkEnvTrusty(process.env.TAILPROTO_REKEY_DISCONNECT_ON_EXPIRED),
+    // 旧钥窗口内的反滥用约束（命中次数/持续时间）
+    tailprotoOldKeyMaxHits: process.env.TAILPROTO_OLDKEY_MAX_HITS
+      ? Number(process.env.TAILPROTO_OLDKEY_MAX_HITS)
+      : 50,
+    tailprotoOldKeyMaxDurationMs: process.env.TAILPROTO_OLDKEY_MAX_DURATION_MS
+      ? Number(process.env.TAILPROTO_OLDKEY_MAX_DURATION_MS)
+      : 3000,
+    tailprotoAllowPlainWhitelist: process.env.TAILPROTO_ALLOW_PLAIN_WHITELIST || 'crypt.init,notify:tailproto.rekey.required,user.login,user.register,user.resolveToken',
+    // P1 可靠性相关开关
+    tailprotoAckTimeoutMs: process.env.TAILPROTO_ACK_TIMEOUT_MS
+      ? Number(process.env.TAILPROTO_ACK_TIMEOUT_MS)
+      : 7000,
+    tailprotoReplayTtlSec: process.env.TAILPROTO_REPLAY_TTL_SEC
+      ? Number(process.env.TAILPROTO_REPLAY_TTL_SEC)
+      : 60,
+    tailprotoSeqWindow: process.env.TAILPROTO_SEQ_WINDOW
+      ? Number(process.env.TAILPROTO_SEQ_WINDOW)
+      : 1000,
+    tailprotoCryptoBackend: process.env.TAILPROTO_CRYPTO_BACKEND || 'node',
+    tailprotoCryptoBatchThreshold: process.env.TAILPROTO_CRYPTO_BATCH_THRESHOLD
+      ? Number(process.env.TAILPROTO_CRYPTO_BATCH_THRESHOLD)
+      : 2048,
+    // Cross-region bus
+    crossRegionEnabled: checkEnvTrusty(process.env.CROSS_REGION_ENABLED),
+    crossRegionLocalBus: process.env.CROSS_REGION_LOCAL_BUS || 'redis', // nats|redis
+    kafkaBrokers: process.env.KAFKA_BROKERS || '',
+    natsUrl: process.env.NATS_URL || '',
+    schemaRegistryUrl: process.env.SCHEMA_REGISTRY_URL || '',
+    crossRegionTxId: process.env.KAFKA_TX_ID || '',
   },
 };
 

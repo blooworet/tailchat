@@ -5,4 +5,11 @@
   .plugin-openapi-app-info_body {
     padding: 0 10px;
   }
+
+  // 修复错误状态输入框的白色背景问题
+  .ant-input-status-error:not(.ant-input-disabled):not(.ant-input-borderless).ant-input,
+  .ant-input-status-error:not(.ant-input-disabled):not(.ant-input-borderless).ant-input:hover {
+    background: transparent !important;
+    border-color: #ff4d4f;
+  }
 }

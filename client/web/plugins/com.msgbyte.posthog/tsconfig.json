@@ -2,6 +2,6 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react",
-    "importsNotUsedAsValues": "error"
+    "verbatimModuleSyntax": true
   }
 }

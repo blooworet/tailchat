@@ -5,6 +5,7 @@ import {
   useAsync,
   useUserId,
   getDMConverseName,
+  GroupPanelType,
   model,
 } from 'tailchat-shared';
 import { useDebugValue, useMemo } from 'react';
@@ -88,7 +89,7 @@ function useGroupPanelActions(): QuickAction[] {
 
     Object.values(groups).forEach((group) => {
       group.panels
-        .filter((p) => p.type !== model.group.GroupPanelType.GROUP)
+        .filter((p) => p.type !== GroupPanelType.GROUP)
         .forEach((panel) => {
           list.push({
             key: `qs#grouppanel#${panel.id}`,

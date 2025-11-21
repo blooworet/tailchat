@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "include": ["./src/server/**/*.ts", "../models/**/*.ts"],
-  "exclude": ["node_modules/**/*", "dist"],
+  "exclude": ["node_modules/**/*", "dist", "../models/**/__tests__/**/*", "../models/**/*.spec.ts", "../models/**/*.test.ts"],
   "compilerOptions": {
     "rootDirs": ["./", "../"],
     "outDir": "./dist",
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
@@ -13,8 +14,10 @@
     "target": "ES2019",
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": false,
     "experimentalDecorators": true,
-    "noEmit": false
+    "noEmit": false,
+    "typeRoots": ["./node_modules/@types", "../node_modules/@types", "../../node_modules/@types"],
+    "types": []
   }
 }

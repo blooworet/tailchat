@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "TailProtoSessionUpdate",
+  "fields": [
+    { "name": "token", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "sessionId", "type": "string" },
+    { "name": "authKeyId", "type": "string" },
+    { "name": "kv", "type": "int" },
+    { "name": "kvTs", "type": "long" },
+    { "name": "lastSeq", "type": "long" },
+    { "name": "nodeId", "type": "string" },
+    { "name": "flags", "type": { "type": "map", "values": "string" }, "default": {} },
+    { "name": "meta", "type": { "type": "map", "values": "string" }, "default": {} },
+    { "name": "ts", "type": "long" },
+    { "name": "origin", "type": "string" }
+  ]
+}

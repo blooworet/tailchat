@@ -1,0 +1,29 @@
+{
+  "name": "textbuild-bot",
+  "version": "1.0.0",
+  "description": "Tailchat 文字制作机器人 - 生成带文字的精美图片",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "tailchat",
+    "bot",
+    "image",
+    "text",
+    "canvas"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "tailchat-client-sdk": "file:./tailchat-client-sdk",
+    "canvas": "^2.11.2",
+    "form-data": "^4.0.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+

@@ -4,7 +4,9 @@ import icons from './icons.json';
 const PLUGIN_ID = 'com.msgbyte.offline-icons';
 const PLUGIN_NAME = 'Offline Icons';
 
-console.log(`Plugin ${PLUGIN_NAME}(${PLUGIN_ID}) is loaded`);
+if (process.env.NODE_ENV === 'development') {
+  console.log(`Plugin ${PLUGIN_NAME}(${PLUGIN_ID}) is loaded`);
+}
 
 // Icon.addIcon
 

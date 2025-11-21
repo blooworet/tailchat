@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import type { ChatConverseInfo } from '../../model/converse';
 import type {
   ChatMessage,
@@ -25,7 +26,16 @@ export interface ChatState {
   currentConverseId: string | null; // 当前活跃的会话id
   converses: Record<string, ChatConverseState>; // <会话Id, 会话信息>
   ack: Record<string, string>; // <会话Id, 本地最后一条会话Id>
+  /**
+   * 会话成员的已读位置映射
+   * <会话Id, <用户Id, lastMessageId>>
+   */
+  memberAcks: Record<string, Record<string, string>>;
   inbox: InboxItem[];
+  /**
+   * 用户“私信列表”中的会话ID（受用户显隐控制）
+   */
+  dmConverseIds: string[];
 
   /**
    * 会话最新消息mapping
@@ -38,8 +48,10 @@ const initialState: ChatState = {
   currentConverseId: null,
   converses: {},
   ack: {},
+  memberAcks: {},
   inbox: [],
   lastMessageMap: {},
+  dmConverseIds: [],
 };
 
 const chatSlice = createSlice({
@@ -221,6 +233,33 @@ const chatSlice = createSlice({
     },
 
     /**
+     * 设置用户的私信会话列表（仅用于侧栏渲染顺序/显隐）
+     */
+    setDMConverseIds(state, action: PayloadAction<string[]>) {
+      const ids = Array.isArray(action.payload) ? action.payload : [];
+      state.dmConverseIds = ids;
+    },
+
+    /**
+     * 添加到本地的私信会话ID
+     */
+    addDMConverseId(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      if (typeof id !== 'string' || id.length === 0) return;
+      if (!state.dmConverseIds.includes(id)) {
+        state.dmConverseIds.push(id);
+      }
+    },
+
+    /**
+     * 从本地私信会话ID列表移除
+     */
+    removeDMConverseId(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      state.dmConverseIds = state.dmConverseIds.filter((x) => x !== id);
+    },
+
+    /**
      * 清理所有会话信息
      */
     clearAllConverses(state) {
@@ -239,6 +278,38 @@ const chatSlice = createSlice({
     ) {
       const { converseId, lastMessageId } = action.payload;
       state.ack[converseId] = lastMessageId;
+    },
+
+    /**
+     * 增量更新：写入某个成员在某会话的已读位置
+     */
+    upsertMemberAck(
+      state,
+      action: PayloadAction<{
+        converseId: string;
+        userId: string;
+        lastMessageId: string;
+      }>
+    ) {
+      const { converseId, userId, lastMessageId } = action.payload;
+      if (!converseId || !userId || !lastMessageId) return;
+      if (!state.memberAcks[converseId]) state.memberAcks[converseId] = {};
+      state.memberAcks[converseId][userId] = lastMessageId;
+    },
+
+    /**
+     * 全量覆盖：设置会话成员的已读快照（可用于低频校正）
+     */
+    setConverseMemberAcks(
+      state,
+      action: PayloadAction<{
+        converseId: string;
+        acks: Record<string, string>; // <userId,lastMessageId>
+      }>
+    ) {
+      const { converseId, acks } = action.payload;
+      if (!converseId || !acks) return;
+      state.memberAcks[converseId] = { ...(acks || {}) };
     },
 
     /**
@@ -264,14 +335,11 @@ const chatSlice = createSlice({
         console.warn('Not found converse,', converseId);
         return;
       }
-
-      const index = converse.messages.findIndex((m) => m._id === messageId);
-      if (index >= 0) {
-        converse.messages[index] = {
-          ...converse.messages[index],
-          ...message,
-        };
-      }
+      // immutable update: map to a new array
+      const nextMessages = converse.messages.map((m) =>
+        m._id === messageId ? { ...m, ...message } : m
+      );
+      state.converses[converseId].messages = nextMessages;
     },
 
     /**
@@ -290,11 +358,10 @@ const chatSlice = createSlice({
         console.warn('Not found converse,', converseId);
         return;
       }
-
-      const index = converse.messages.findIndex((m) => m._id === messageId);
-      if (index >= 0) {
-        converse.messages.splice(index, 1);
-      }
+      // immutable update: filter to a new array
+      state.converses[converseId].messages = converse.messages.filter(
+        (m) => m._id !== messageId
+      );
     },
 
     /**
@@ -335,18 +402,16 @@ const chatSlice = createSlice({
         console.warn('Not found converse,', converseId);
         return;
       }
-
-      const message = converse.messages.find((m) => m._id === messageId);
-      if (!message) {
-        console.warn('Not found message,', messageId);
-        return;
-      }
-
-      if (!Array.isArray(message.reactions)) {
-        message.reactions = [];
-      }
-
-      message.reactions.push(reaction);
+      // immutable update: map messages, and for target message, create new reactions array
+      const nextMessages = converse.messages.map((m) => {
+        if (m._id !== messageId) return m;
+        const prev = Array.isArray(m.reactions) ? m.reactions : [];
+        return {
+          ...m,
+          reactions: [...prev, reaction],
+        } as LocalChatMessage;
+      });
+      state.converses[converseId].messages = nextMessages;
     },
 
     /**
@@ -366,21 +431,19 @@ const chatSlice = createSlice({
         console.warn('Not found converse,', converseId);
         return;
       }
-
-      const message = converse.messages.find((m) => m._id === messageId);
-      if (!message) {
-        console.warn('Not found message,', messageId);
-        return;
-      }
-
-      if (!Array.isArray(message.reactions)) {
-        message.reactions = [];
-      }
-
-      const reactionIndex = message.reactions.findIndex(
-        (r) => r.name === reaction.name && r.author === reaction.author
-      );
-      message.reactions.splice(reactionIndex, 1);
+      // immutable update: map messages, and for target message, filter reactions
+      const nextMessages = converse.messages.map((m) => {
+        if (m._id !== messageId) return m;
+        const prev = Array.isArray(m.reactions) ? m.reactions : [];
+        const filtered = prev.filter(
+          (r) => !(r.name === reaction.name && r.author === reaction.author)
+        );
+        return {
+          ...m,
+          reactions: filtered,
+        } as LocalChatMessage;
+      });
+      state.converses[converseId].messages = nextMessages;
     },
     /**
      * 设置收件箱

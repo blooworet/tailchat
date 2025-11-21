@@ -1,4 +1,5 @@
 import { request } from '../api/request';
+import { getOrCreateSocket } from '../api/socket';
 
 export interface PluginManifest {
   /**
@@ -63,9 +64,8 @@ export interface PluginManifest {
  * 后端动态
  */
 export async function fetchRegistryPlugins(): Promise<PluginManifest[]> {
-  const { data } = await request.get('/api/plugin/registry/list');
-
-  return data;
+  const socket = await getOrCreateSocket();
+  return await socket.request<PluginManifest[]>('plugin.registry.list', {});
 }
 
 /**

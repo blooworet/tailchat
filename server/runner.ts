@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import path from 'path';
 import { startDevRunner } from 'tailchat-server-sdk/dist/runner';
 
