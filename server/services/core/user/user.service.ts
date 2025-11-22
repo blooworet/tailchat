@@ -970,6 +970,7 @@ class UserService extends TcService {
         {
           username: 1,
           nickname: 1,
+          avatar: 1,
         }
       )
       .lean();
@@ -982,6 +983,7 @@ class UserService extends TcService {
       _id: String((doc as any)._id),
       username: doc.username ?? '',
       nickname: doc.nickname ?? '',
+      avatar: (doc as any).avatar ?? '',
     };
 
     if (cacher) {
